@@ -1,0 +1,44 @@
+name: Check website JavaScript
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out website
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check inline JavaScript in HTML
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const cp = require('child_process');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script\\b(?![^>]*\\bsrc\\s*=)[^>]*>([\\s\\S]*?)<\\/script>/gi)]
+            .map(match => match[1])
+            .filter(code => code.trim());
+          if (!scripts.length) {
+            console.error('No inline JavaScript found in index.html');
+            process.exit(1);
+          }
+          for (let i = 0; i < scripts.length; i++) {
+            const result = cp.spawnSync('node', ['--check'], {
+              input: scripts[i],
+              encoding: 'utf8'
+            });
+            if (result.status !== 0) {
+              console.error('JavaScript syntax error in inline script #' + (i + 1));
+              process.stderr.write(result.stderr || result.stdout);
+              process.exit(result.status || 1);
+            }
+          }
+          console.log('JavaScript syntax check passed for ' + scripts.length + ' inline script(s).');
+          NODE
