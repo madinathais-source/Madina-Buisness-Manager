@@ -1,0 +1,38 @@
+name: Website code validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check application JavaScript
+        run: node --check app.js
+      - name: Check inline JavaScript in HTML pages
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const cp = require('child_process');
+          for (const file of ['index.html', 'order.html']) {
+            const html = fs.readFileSync(file, 'utf8');
+            const scripts = [...html.matchAll(/<script\\b(?![^>]*\\bsrc\\s*=)[^>]*>([\\s\\S]*?)<\\/script>/gi)]
+              .map(m => m[1]).filter(s => s.trim());
+            for (let i = 0; i < scripts.length; i++) {
+              const r = cp.spawnSync('node', ['--check'], { input: scripts[i], encoding: 'utf8' });
+              if (r.status !== 0) {
+                console.error(file + ' inline script #' + (i + 1) + ' failed');
+                process.stderr.write(r.stderr || r.stdout);
+                process.exit(r.status || 1);
+              }
+            }
+          }
+          console.log('All website JavaScript syntax checks passed.');
+          NODE
