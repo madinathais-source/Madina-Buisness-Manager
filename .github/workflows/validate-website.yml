@@ -23,7 +23,7 @@ jobs:
           const cp = require('child_process');
           for (const file of ['index.html', 'order.html']) {
             const html = fs.readFileSync(file, 'utf8');
-            const scripts = [...html.matchAll(/<script\\b(?![^>]*\\bsrc\\s*=)[^>]*>([\\s\\S]*?)<\\/script>/gi)]
+            const scripts = [...html.matchAll(/<script\b(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script>/gi)]
               .map(m => m[1]).filter(s => s.trim());
             for (let i = 0; i < scripts.length; i++) {
               const r = cp.spawnSync('node', ['--check'], { input: scripts[i], encoding: 'utf8' });
