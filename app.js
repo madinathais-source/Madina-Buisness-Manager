@@ -41,6 +41,29 @@ const inRange=d=>{let x=reportDate(d);return x&&x>=start&&x<=end};const sales=db
 const rows=[];if(mode==='year'){const y=Number($('incomeYear').value||today.getFullYear());for(let m=1;m<=12;m++){const key=y+'-'+String(m).padStart(2,'0');rows.push([key,db.sales.filter(x=>reportDate(x.date).startsWith(key)),db.expenses.filter(x=>reportDate(x.date).startsWith(key))])}}else rows.push([label,sales,expenses]);$('periodBreakdown').innerHTML=rows.map(([name,ss,ee])=>{const st=ss.reduce((n,x)=>n+(Number(x.total)||0),0),sp=ss.reduce((n,x)=>n+(Number(x.paid)||0),0),oi=ee.filter(x=>x.type==='অন্যান্য আয়').reduce((n,x)=>n+(Number(x.amount)||0),0),ex=ee.filter(x=>x.type==='ব্যয়').reduce((n,x)=>n+(Number(x.amount)||0),0),pr=ss.reduce((n,x)=>n+(Number(x.total)||0)-(Number(x.costTotal)||0),0)+oi-ex;return '<tr><td>'+esc(name)+'</td><td>'+money(st)+'</td><td>'+money(sp)+'</td><td>'+money(oi)+'</td><td>'+money(ex)+'</td><td>'+money(pr)+'</td></tr>'}).join('');window.currentIncomeReport={label,rows:rows.map(([name,ss,ee])=>[name,ss.reduce((n,x)=>n+(Number(x.total)||0),0),ss.reduce((n,x)=>n+(Number(x.paid)||0),0),ee.filter(x=>x.type==='অন্যান্য আয়').reduce((n,x)=>n+(Number(x.amount)||0),0),ee.filter(x=>x.type==='ব্যয়').reduce((n,x)=>n+(Number(x.amount)||0),0)])}}
 $('lowStock').innerHTML=db.products.filter(p=>p.stock<=p.min).map(p=>`<div class="warn">${esc(p.name)} — ${p.stock} ${p.unit}</div>`).join('')||'কম স্টকের পণ্য নেই।';$('recentSales').innerHTML=db.sales.slice(-5).reverse().map(s=>`<div class="row" style="padding:5px 0;border-bottom:1px solid var(--line)"><span>${s.invoice} • ${esc(s.customerName)}</span><b class="right">${money(s.total)}</b></div>`).join('')||'এখনো বিক্রয় নেই।';db.purchaseEstimates=db.purchaseEstimates||[];$('estimateHistoryRows').innerHTML=db.purchaseEstimates.slice().reverse().map(x=>`<tr><td>${esc(x.estimateNo)}<br><small>${esc(x.date)}</small></td><td>${esc(x.supplier||'—')}</td><td>${(x.lines||[]).map(v=>esc(v.name)).join('<br>')}</td><td>${money(x.total)}</td><td><button type="button" class="secondary" data-est-print="${x.id}">প্রিন্ট</button> <button type="button" class="secondary" data-est-share="${x.id}">WhatsApp</button></td></tr>`).join('');$('estimateHistoryEmpty').style.display=db.purchaseEstimates.length?'none':'block';if(migrated){localStorage.setItem(KEY,JSON.stringify(db));if(currentUser&&!isApplyingCloud){clearTimeout(cloudTimer);cloudTimer=setTimeout(pushCloud,650)}}}
 $('productForm').onsubmit=e=>{e.preventDefault();let pid=$('pId').value,old=db.products.find(p=>p.id===pid);let p={id:pid||id(),companyId:$('pCompany').value||'legacy',name:$('pName').value.trim(),family:$('pFamily').value.trim()||$('pName').value.trim(),sku:$('pSku').value.trim(),variant:$('pVariant').value.trim(),size:$('pSize').value.trim(),color:$('pColor').value.trim(),thickness:$('pThickness').value.trim(),spec:$('pSpec').value.trim(),category:$('pCategory').value,unit:$('pUnit').value,stock:+$('pStock').value,cost:+$('pCost').value,retail:+$('pRetail').value,wholesale:+$('pWholesale').value,box:+$('pBox').value||0,bundle:+$('pBundle').value||0,barcode:$('pBarcode').value.trim(),min:+$('pMin').value||0};if(old)Object.assign(old,p);else db.products.push(p);$('productForm').reset();$('pId').value='';save();alert('পণ্য সংরক্ষণ হয়েছে');};$('clearProduct').onclick=()=>$('productForm').reset();$('productSearch').oninput=renderProducts;
+$('makeCompanyCatalogs').onclick=()=>{
+ const sources=db.products.filter(p=>p.companyId==='legacy'||p.catalogSourceId||p.companyId);
+ const targets=COMPANY_PROFILES.filter(c=>['Aluminium','SS','Aluminium Hardware','SS Hardware'].includes(c.type));
+ const signature=p=>[p.name,p.family,p.sku,p.variant,p.size,p.color,p.thickness,p.spec,p.category,p.unit,p.cost,p.retail,p.wholesale,p.box,p.bundle,p.barcode].map(v=>String(v??'').trim().toLowerCase()).join('|');
+ const unique=[...new Map(sources.map(p=>[signature(p),p])).values()];
+ const copies=[];
+ unique.forEach(src=>{
+  const cat=String(src.category||'').toLowerCase(),sku=String(src.sku||'').toUpperCase(),label=[src.name,src.family,src.spec].join(' ').toLowerCase();
+  let types=[];
+  if(sku.startsWith('SS201-')||cat.includes('ss')||cat.includes('স্টেইনলেস')||label.includes('স্টেইনলেস')||label.includes('ss pipe'))types=['SS'];
+  else if(cat.includes('অ্যালুমিনিয়াম')||cat.includes('aluminium')||cat.includes('thai')||label.includes('অ্যালুমিনিয়াম')||label.includes('aluminium'))types=['Aluminium'];
+  else if(cat.includes('হার্ডওয়্যার')||cat.includes('hardware')||label.includes('হার্ডওয়্যার')||label.includes('hardware'))types=['Aluminium Hardware','SS Hardware'];
+  if(!types.length)return;
+  targets.filter(c=>types.includes(c.type)).forEach(c=>{
+   if(db.products.some(p=>p.companyId===c.id&&signature(p)===signature(src)))return;
+   copies.push({...src,id:id(),companyId:c.id,catalogSourceId:src.catalogSourceId||src.id,stock:0});
+  });
+ });
+ if(!copies.length){alert('সব কোম্পানির তালিকা আগে থেকেই তৈরি আছে।');return}
+ if(!confirm('একই পণ্যের নাম, ভ্যারিয়েন্ট, রং, সাইজ ও অন্যান্য তথ্য রেখে '+copies.length+'টি কোম্পানিভিত্তিক পণ্য তৈরি হবে। সব কপির স্টক ০ থাকবে; পুরোনো পণ্য অপরিবর্তিত থাকবে। চালাবেন?'))return;
+ db.products.push(...copies);save();alert(copies.length+'টি পণ্য কোম্পানিভিত্তিক তালিকায় যোগ হয়েছে। সব স্টক ০ রাখা হয়েছে।');
+};
+
 
 $('importSSPipePrices').onclick=async()=>{
  db.settings=db.settings||{};
