@@ -9,6 +9,29 @@ const inRange=d=>{let x=reportDate(d);return x&&x>=start&&x<=end};const sales=db
 const rows=[];if(mode==='year'){const y=Number($('incomeYear').value||today.getFullYear());for(let m=1;m<=12;m++){const key=y+'-'+String(m).padStart(2,'0');rows.push([key,db.sales.filter(x=>reportDate(x.date).startsWith(key)),db.expenses.filter(x=>reportDate(x.date).startsWith(key))])}}else rows.push([label,sales,expenses]);$('periodBreakdown').innerHTML=rows.map(([name,ss,ee])=>{const st=ss.reduce((n,x)=>n+(Number(x.total)||0),0),sp=ss.reduce((n,x)=>n+(Number(x.paid)||0),0),oi=ee.filter(x=>x.type==='অন্যান্য আয়').reduce((n,x)=>n+(Number(x.amount)||0),0),ex=ee.filter(x=>x.type==='ব্যয়').reduce((n,x)=>n+(Number(x.amount)||0),0),pr=ss.reduce((n,x)=>n+(Number(x.total)||0)-(Number(x.costTotal)||0),0)+oi-ex;return '<tr><td>'+esc(name)+'</td><td>'+money(st)+'</td><td>'+money(sp)+'</td><td>'+money(oi)+'</td><td>'+money(ex)+'</td><td>'+money(pr)+'</td></tr>'}).join('');window.currentIncomeReport={label,rows:rows.map(([name,ss,ee])=>[name,ss.reduce((n,x)=>n+(Number(x.total)||0),0),ss.reduce((n,x)=>n+(Number(x.paid)||0),0),ee.filter(x=>x.type==='অন্যান্য আয়').reduce((n,x)=>n+(Number(x.amount)||0),0),ee.filter(x=>x.type==='ব্যয়').reduce((n,x)=>n+(Number(x.amount)||0),0)])}}
 $('lowStock').innerHTML=db.products.filter(p=>p.stock<=p.min).map(p=>`<div class="warn">${esc(p.name)} — ${p.stock} ${p.unit}</div>`).join('')||'কম স্টকের পণ্য নেই।';$('recentSales').innerHTML=db.sales.slice(-5).reverse().map(s=>`<div class="row" style="padding:5px 0;border-bottom:1px solid var(--line)"><span>${s.invoice} • ${esc(s.customerName)}</span><b class="right">${money(s.total)}</b></div>`).join('')||'এখনো বিক্রয় নেই।';db.purchaseEstimates=db.purchaseEstimates||[];$('estimateHistoryRows').innerHTML=db.purchaseEstimates.slice().reverse().map(x=>`<tr><td>${esc(x.estimateNo)}<br><small>${esc(x.date)}</small></td><td>${esc(x.supplier||'—')}</td><td>${(x.lines||[]).map(v=>esc(v.name)).join('<br>')}</td><td>${money(x.total)}</td><td><button type="button" class="secondary" data-est-print="${x.id}">প্রিন্ট</button> <button type="button" class="secondary" data-est-share="${x.id}">WhatsApp</button></td></tr>`).join('');$('estimateHistoryEmpty').style.display=db.purchaseEstimates.length?'none':'block';if(migrated){localStorage.setItem(KEY,JSON.stringify(db));if(currentUser&&!isApplyingCloud){clearTimeout(cloudTimer);cloudTimer=setTimeout(pushCloud,650)}}}
 $('productForm').onsubmit=e=>{e.preventDefault();let pid=$('pId').value,old=db.products.find(p=>p.id===pid);let p={id:pid||id(),name:$('pName').value.trim(),family:$('pFamily').value.trim()||$('pName').value.trim(),sku:$('pSku').value.trim(),variant:$('pVariant').value.trim(),size:$('pSize').value.trim(),color:$('pColor').value.trim(),thickness:$('pThickness').value.trim(),spec:$('pSpec').value.trim(),category:$('pCategory').value,unit:$('pUnit').value,stock:+$('pStock').value,cost:+$('pCost').value,retail:+$('pRetail').value,wholesale:+$('pWholesale').value,box:+$('pBox').value||0,bundle:+$('pBundle').value||0,barcode:$('pBarcode').value.trim(),min:+$('pMin').value||0};if(old)Object.assign(old,p);else db.products.push(p);$('productForm').reset();$('pId').value='';save();alert('পণ্য সংরক্ষণ হয়েছে');};$('clearProduct').onclick=()=>$('productForm').reset();$('productSearch').oninput=renderProducts;
+
+$('importSSPipePrices').onclick=async()=>{
+ db.settings=db.settings||{};
+ if(db.settings.ssPipe201PurchaseImportedAt){alert('SS পাইপের ২০১ গ্রেড মূল্যতালিকা আগে থেকেই যোগ করা হয়েছে।');return}
+ if(!confirm('২০১ গ্রেডের SS Round, Box ও Rectangular Pipe-এর ২০২৬ সালের দৃশ্যমান ক্রয়মূল্য যোগ হবে। স্টক ০ এবং বিক্রয়মূল্য ০ থাকবে। ব্র্যান্ডের নাম যোগ হবে না। চালিয়ে যাবেন?'))return;
+ const b=$('importSSPipePrices');b.disabled=true;b.textContent='যোগ হচ্ছে…';
+ try{
+  const res=await fetch('./ss-pipe-purchase-prices-2026.json',{cache:'no-store'});if(!res.ok)throw new Error('দাম তালিকার ফাইল পাওয়া যায়নি');
+  const data=await res.json(),added=[];
+  data.rows.forEach((r,ri)=>{
+   r.prices.forEach((price,ti)=>{
+    if(price===null||price===undefined||price==='')return;
+    const thickness=data.thicknessMM[ti],type=r[0],size=r[1];
+    const sku='SS201-'+(ri+1)+'-'+String(thickness).replace('.','_');
+    if(db.products.some(p=>p.sku===sku))return;
+    added.push({id:id(),name:'SS '+type+' '+size+' ('+thickness+' MM)',family:'SS '+type,sku,variant:'201 Grade',size,color:'',thickness:thickness+' MM',spec:'২০১ গ্রেড SS পাইপ',category:'স্টেইনলেস স্টিল',unit:'Piece',stock:0,cost:Number(price),retail:0,wholesale:0,box:0,bundle:0,barcode:'',min:0});
+   });
+  });
+  db.products.push(...added);db.settings.ssPipe201PurchaseImportedAt=new Date().toISOString();db.settings.ssPipe201PurchaseSource='201 Grade SS Pipe Price List 2026';
+  save();alert('সফলভাবে '+added.length+'টি SS পাইপের ক্রয়মূল্য যোগ হয়েছে। হাতিম নাম রাখা হয়নি; স্টক ও বিক্রয়মূল্য ০।');
+ }catch(err){console.error(err);alert('দাম যোগ করা যায়নি: '+(err.message||err))}
+ finally{b.disabled=false;b.textContent='SS পাইপ ক্রয়মূল্য যোগ করুন'}
+};
 $('importPriceList').onclick=async()=>{
   db.settings=db.settings||{};
   if(db.settings.priceList20260315ImportedAt){alert('১৫-০৩-২০২৬ তারিখের মূল্যতালিকা আগে থেকেই ইমপোর্ট করা হয়েছে।');return}
