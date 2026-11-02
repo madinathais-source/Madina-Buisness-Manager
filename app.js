@@ -22,7 +22,14 @@ function companyName(id){return COMPANY_PROFILES.find(c=>c.id===id)?.name||'প�
    });
   });
  }
- html+=other.map(p=>`<tr><td><b>${esc(p.name)}</b><br><span class="muted">পরিবার: ${esc(p.family||p.name)} • ${esc(p.category)}${p.variant?' • গ্রেড '+esc(p.variant):''}${p.size?' • সাইজ '+esc(p.size):''}${p.color?' • রং '+esc(p.color):''}${p.thickness?' • পুরুত্ব '+esc(p.thickness):''}${p.spec?' • '+esc(p.spec):''}<br>SKU: ${esc(p.sku)}</span></td><td>${esc(p.unit)}</td><td class="${p.stock<=p.min?'warn':''}">${p.stock}</td><td>${money(p.cost)}</td><td>${money(p.retail)}</td><td>${money(p.wholesale)}</td><td>${esc(p.barcode)}</td><td><div class="actions"><button class="secondary" data-editp="${p.id}">সম্পাদনা</button><button class="danger" data-del="products" data-id="${p.id}">×</button></div></td></tr>`).join('');
+ const companyOrder=[...COMPANY_PROFILES.map(c=>c.id),'legacy'];
+ companyOrder.forEach(co=>{
+  const items=other.filter(p=>(p.companyId||'legacy')===co);
+  if(!items.length)return;
+  const label=co==='legacy'?'পুরোনো / সাধারণ স্টক':companyName(co);
+  html+='<tr class="group-row"><td colspan="8"><b>'+esc(label)+'</b> • '+items.length+'টি পণ্য</td></tr>';
+  html+=items.map(p=>`<tr><td><b>${esc(p.name)}</b><br><span class="muted">পরিবার: ${esc(p.family||p.name)} • ${esc(p.category)}${p.variant?' • গ্রেড '+esc(p.variant):''}${p.size?' • সাইজ '+esc(p.size):''}${p.color?' • রং '+esc(p.color):''}${p.thickness?' • পুরুত্ব '+esc(p.thickness):''}${p.spec?' • '+esc(p.spec):''}<br>SKU: ${esc(p.sku)}</span></td><td>${esc(p.unit)}</td><td class="${p.stock<=p.min?'warn':''}">${p.stock}</td><td>${money(p.cost)}</td><td>${money(p.retail)}</td><td>${money(p.wholesale)}</td><td>${esc(p.barcode)}</td><td><div class="actions"><button class="secondary" data-editp="${p.id}">সম্পাদনা</button><button class="danger" data-del="products" data-id="${p.id}">×</button></div></td></tr>`).join('');
+ });
  $('productRows').innerHTML=html||'<tr><td colspan="8" class="empty">কোনো পণ্য নেই</td></tr>';
  let buyCo=$('buyCompany')?.value||COMPANY_PROFILES[0].id,saleCo=$('saleCompany')?.value||COMPANY_PROFILES[0].id;let optsFor=co=>db.products.filter(p=>p.companyId===co).map(p=>`<option value="${p.id}">${esc(productLabel(p))} (স্টক ${p.stock} ${p.unit})</option>`).join('');let opts=optsFor(buyCo);
  $('buyProduct').innerHTML='<option value="">পণ্য নির্বাচন করুন</option>'+opts;$('saleProduct').innerHTML='<option value="">পণ্য নির্বাচন করুন</option>'+optsFor(saleCo);
