@@ -12,7 +12,15 @@ $('productForm').onsubmit=e=>{e.preventDefault();let pid=$('pId').value,old=db.p
 
 $('importSSPipePrices').onclick=async()=>{
  db.settings=db.settings||{};
- if(db.settings.ssPipe201PurchaseImportedAt){alert('SS পাইপের ২০১ গ্রেড মূল্যতালিকা আগে থেকেই যোগ করা হয়েছে।');return}
+ if(db.settings.ssPipe201PurchaseImportedAt){
+  let organized=0;
+  db.products.filter(p=>String(p.sku||'').startsWith('SS201-')).forEach(p=>{
+   const kind=String(p.name||'').includes('Round Pipe')?'Round Pipe':String(p.name||'').includes('Box Pipe')?'Box Pipe':'Rectangular Pipe';
+   const size=String(p.size||'').trim();
+   p.category='SS Pipe / '+kind;p.family='SS Pipe / '+kind+' / '+size;organized++;
+  });
+  save();alert('আগের SS পাইপের '+organized+'টি মূল্যও আলাদা ক্যাটাগরি ও সাইজ অনুযায়ী সাজানো হয়েছে।');return
+}
  if(!confirm('২০১ গ্রেডের SS Round, Box ও Rectangular Pipe-এর ২০২৬ সালের দৃশ্যমান ক্রয়মূল্য যোগ হবে। স্টক ০ এবং বিক্রয়মূল্য ০ থাকবে। ব্র্যান্ডের নাম যোগ হবে না। চালিয়ে যাবেন?'))return;
  const b=$('importSSPipePrices');b.disabled=true;b.textContent='যোগ হচ্ছে…';
  try{
@@ -21,10 +29,10 @@ $('importSSPipePrices').onclick=async()=>{
   data.rows.forEach((r,ri)=>{
    r.prices.forEach((price,ti)=>{
     if(price===null||price===undefined||price==='')return;
-    const thickness=data.thicknessMM[ti],type=r[0],size=r[1];
+    const thickness=data.thicknessMM[ti],type=r.type,size=r.size;
     const sku='SS201-'+(ri+1)+'-'+String(thickness).replace('.','_');
     if(db.products.some(p=>p.sku===sku))return;
-    added.push({id:id(),name:'SS '+type+' '+size+' ('+thickness+' MM)',family:'SS '+type,sku,variant:'201 Grade',size,color:'',thickness:thickness+' MM',spec:'২০১ গ্রেড SS পাইপ',category:'স্টেইনলেস স্টিল',unit:'Piece',stock:0,cost:Number(price),retail:0,wholesale:0,box:0,bundle:0,barcode:'',min:0});
+    added.push({id:id(),name:'SS '+type+' '+size+' ('+thickness+' MM)',family:'SS Pipe / '+type+' / '+size,sku,variant:'201 Grade',size,color:'',thickness:thickness+' MM',spec:'২০১ গ্রেড SS পাইপ',category:'SS Pipe / '+type,unit:'Piece',stock:0,cost:Number(price),retail:0,wholesale:0,box:0,bundle:0,barcode:'',min:0});
    });
   });
   db.products.push(...added);db.settings.ssPipe201PurchaseImportedAt=new Date().toISOString();db.settings.ssPipe201PurchaseSource='201 Grade SS Pipe Price List 2026';
