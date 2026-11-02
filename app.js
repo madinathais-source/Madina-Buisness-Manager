@@ -42,26 +42,28 @@ const rows=[];if(mode==='year'){const y=Number($('incomeYear').value||today.getF
 $('lowStock').innerHTML=db.products.filter(p=>p.stock<=p.min).map(p=>`<div class="warn">${esc(p.name)} — ${p.stock} ${p.unit}</div>`).join('')||'কম স্টকের পণ্য নেই।';$('recentSales').innerHTML=db.sales.slice(-5).reverse().map(s=>`<div class="row" style="padding:5px 0;border-bottom:1px solid var(--line)"><span>${s.invoice} • ${esc(s.customerName)}</span><b class="right">${money(s.total)}</b></div>`).join('')||'এখনো বিক্রয় নেই।';db.purchaseEstimates=db.purchaseEstimates||[];$('estimateHistoryRows').innerHTML=db.purchaseEstimates.slice().reverse().map(x=>`<tr><td>${esc(x.estimateNo)}<br><small>${esc(x.date)}</small></td><td>${esc(x.supplier||'—')}</td><td>${(x.lines||[]).map(v=>esc(v.name)).join('<br>')}</td><td>${money(x.total)}</td><td><button type="button" class="secondary" data-est-print="${x.id}">প্রিন্ট</button> <button type="button" class="secondary" data-est-share="${x.id}">WhatsApp</button></td></tr>`).join('');$('estimateHistoryEmpty').style.display=db.purchaseEstimates.length?'none':'block';if(migrated){localStorage.setItem(KEY,JSON.stringify(db));if(currentUser&&!isApplyingCloud){clearTimeout(cloudTimer);cloudTimer=setTimeout(pushCloud,650)}}}
 $('productForm').onsubmit=e=>{e.preventDefault();let pid=$('pId').value,old=db.products.find(p=>p.id===pid);let p={id:pid||id(),companyId:$('pCompany').value||'legacy',name:$('pName').value.trim(),family:$('pFamily').value.trim()||$('pName').value.trim(),sku:$('pSku').value.trim(),variant:$('pVariant').value.trim(),size:$('pSize').value.trim(),color:$('pColor').value.trim(),thickness:$('pThickness').value.trim(),spec:$('pSpec').value.trim(),category:$('pCategory').value,unit:$('pUnit').value,stock:+$('pStock').value,cost:+$('pCost').value,retail:+$('pRetail').value,wholesale:+$('pWholesale').value,box:+$('pBox').value||0,bundle:+$('pBundle').value||0,barcode:$('pBarcode').value.trim(),min:+$('pMin').value||0};if(old)Object.assign(old,p);else db.products.push(p);$('productForm').reset();$('pId').value='';save();alert('পণ্য সংরক্ষণ হয়েছে');};$('clearProduct').onclick=()=>$('productForm').reset();$('productSearch').oninput=renderProducts;
 $('makeCompanyCatalogs').onclick=()=>{
- const sources=db.products.filter(p=>p.companyId==='legacy'||p.catalogSourceId||p.companyId);
- const targets=COMPANY_PROFILES.filter(c=>['Aluminium','SS','Aluminium Hardware','SS Hardware'].includes(c.type));
  const signature=p=>[p.name,p.family,p.sku,p.variant,p.size,p.color,p.thickness,p.spec,p.category,p.unit,p.cost,p.retail,p.wholesale,p.box,p.bundle,p.barcode].map(v=>String(v??'').trim().toLowerCase()).join('|');
- const unique=[...new Map(sources.map(p=>[signature(p),p])).values()];
- const copies=[];
- unique.forEach(src=>{
-  const cat=String(src.category||'').toLowerCase(),sku=String(src.sku||'').toUpperCase(),label=[src.name,src.family,src.spec].join(' ').toLowerCase();
-  let types=[];
-  if(sku.startsWith('SS201-')||cat.includes('ss')||cat.includes('স্টেইনলেস')||label.includes('স্টেইনলেস')||label.includes('ss pipe'))types=['SS'];
-  else if(cat.includes('অ্যালুমিনিয়াম')||cat.includes('aluminium')||cat.includes('thai')||label.includes('অ্যালুমিনিয়াম')||label.includes('aluminium'))types=['Aluminium'];
-  else if(cat.includes('হার্ডওয়্যার')||cat.includes('hardware')||label.includes('হার্ডওয়্যার')||label.includes('hardware'))types=['Aluminium Hardware','SS Hardware'];
-  if(!types.length)return;
-  targets.filter(c=>types.includes(c.type)).forEach(c=>{
+ const sources=[...new Map(db.products.map(p=>[signature(p),p])).values()];
+ const copies=[];let aluminium=0,ss=0,hardware=0,unmatched=0;
+ sources.forEach(src=>{
+  const cat=String(src.category||'').toLowerCase(),sku=String(src.sku||'').toUpperCase(),label=[src.name,src.family,src.spec,src.category].join(' ').toLowerCase();
+  let targets=[];
+  const isSS=sku.startsWith('SS201-')||cat.includes('ss')||cat.includes('স্টেইনলেস')||label.includes('স্টেইনলেস')||label.includes('stainless')||label.includes('ss pipe');
+  const isAl=cat.includes('অ্যালুমিন')||cat.includes('aluminium')||cat.includes('aluminum')||cat.includes('thai')||label.includes('অ্যালুমিন')||label.includes('aluminium')||label.includes('aluminum');
+  const isHardware=cat.includes('হার্ডওয়্যার')||cat.includes('হার্ডওয়্যার')||cat.includes('hardware')||label.includes('হার্ডওয়্যার')||label.includes('হার্ডওয়্যার')||label.includes('hardware');
+  if(isHardware){targets=COMPANY_PROFILES.filter(c=>c.type==='Aluminium Hardware'||c.type==='SS Hardware');hardware++}
+  else if(isSS){targets=COMPANY_PROFILES.filter(c=>c.type==='SS');ss++}
+  else if(isAl){targets=COMPANY_PROFILES.filter(c=>c.type==='Aluminium');aluminium++}
+  else {unmatched++;return}
+  targets.forEach(c=>{
    if(db.products.some(p=>p.companyId===c.id&&signature(p)===signature(src)))return;
    copies.push({...src,id:id(),companyId:c.id,catalogSourceId:src.catalogSourceId||src.id,stock:0});
   });
  });
- if(!copies.length){alert('সব কোম্পানির তালিকা আগে থেকেই তৈরি আছে।');return}
- if(!confirm('একই পণ্যের নাম, ভ্যারিয়েন্ট, রং, সাইজ ও অন্যান্য তথ্য রেখে '+copies.length+'টি কোম্পানিভিত্তিক পণ্য তৈরি হবে। সব কপির স্টক ০ থাকবে; পুরোনো পণ্য অপরিবর্তিত থাকবে। চালাবেন?'))return;
- db.products.push(...copies);save();alert(copies.length+'টি পণ্য কোম্পানিভিত্তিক তালিকায় যোগ হয়েছে। সব স্টক ০ রাখা হয়েছে।');
+ if(!copies.length){alert('নতুন কোনো কপি তৈরি হয়নি। শনাক্ত পণ্য: Aluminium '+aluminium+', SS '+ss+', Hardware '+hardware+', অন্য/অশনাক্ত '+unmatched+'। কোম্পানির তালিকা আগে থেকেই থাকলে সেটিও কারণ হতে পারে।');return}
+ if(!confirm('কোম্পানিভিত্তিক '+copies.length+'টি পণ্যের কপি তৈরি হবে। Aluminium উৎস '+aluminium+', SS উৎস '+ss+', Hardware উৎস '+hardware+'। প্রতিটি কপির স্টক ০ থাকবে; মূল পণ্য অপরিবর্তিত থাকবে। চালাবেন?'))return;
+ const b=$('makeCompanyCatalogs');b.disabled=true;b.textContent='তালিকা তৈরি হচ্ছে…';
+ try{db.products.push(...copies);save();alert('তালিকা তৈরি হয়েছে। '+copies.length+'টি পণ্য-কপি যোগ হয়েছে। সব কপির স্টক ০। অশনাক্ত পণ্য বাদ: '+unmatched+'টি।')}catch(err){console.error(err);alert('তালিকা তৈরি করা যায়নি: '+(err.message||err))}finally{b.disabled=false;b.textContent='সব কোম্পানির পণ্যের তালিকা তৈরি করুন'}
 };
 
 
