@@ -18,7 +18,7 @@ function companyName(id){return COMPANY_PROFILES.find(c=>c.id===id)?.name||'প�
    sizes.forEach(size=>{
     const items=group.filter(p=>(p.size||'অনির্ধারিত সাইজ')===size).sort((a,b)=>parseFloat(a.thickness)-parseFloat(b.thickness));
     html+='<tr class="size-row"><td colspan="8"><b>সাইজ: '+esc(size)+'</b></td></tr>';
-    items.forEach(p=>{html+='<tr><td>'+esc(p.name)+'<br><span class="muted">গ্রেড '+esc(p.variant||'201')+' • '+esc(p.thickness||'')+'</span></td><td>'+esc(p.unit)+'</td><td class="'+(p.stock<=p.min?'warn':'')+'">'+p.stock+'</td><td><b>'+money(p.cost)+'</b></td><td>'+money(p.retail)+'</td><td>'+money(p.wholesale)+'</td><td>'+esc(p.barcode)+'</td><td><div class="actions"><button class="secondary" data-editp="'+p.id+'">সম্পাদনা</button><button class="danger" data-del="products" data-id="'+p.id+'">×</button></div></td></tr>'});
+    items.forEach(p=>{html+='<tr><td>'+esc(p.name)+'<br><span class="muted">গ্রেড '+esc(p.variant||'201')+' • '+esc(p.thickness||'')+'</span></td><td>'+esc(p.unit)+'</td><td class="'+(p.stock<=p.min?'warn':'')+'">'+p.stock+'</td><td><b>'+money(p.cost)+'</b></td><td>'+money(p.retail)+'</td><td>'+money(p.wholesale)+'</td><td>'+esc(p.barcode)+'</td><td><div class="actions"><select data-assign-company="'+p.id+'" aria-label="স্টক বিভাগ" style="max-width:150px">'+COMPANY_PROFILES.map(c=>'<option value="'+c.id+'" '+((p.companyId||'legacy')===c.id?'selected':'')+'>'+esc(c.name)+'</option>').join('')+'<option value="legacy" '+((p.companyId||'legacy')==='legacy'?'selected':'')+'>পুরোনো / সাধারণ</option></select><button class="secondary" data-editp="'+p.id+'">সম্পাদনা</button><button class="danger" data-del="products" data-id="'+p.id+'">×</button></div></td></tr>'});
    });
   });
  }
