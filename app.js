@@ -119,16 +119,19 @@ $('importPriceList').onclick=async()=>{
     if(typeof DecompressionStream==='undefined')throw new Error('এই ব্রাউজারে gzip ডিকম্প্রেশন সমর্থিত নয়। Chrome আপডেট করে আবার চেষ্টা করুন।');
     const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
     const list=await new Response(stream).json();
-    if(!Array.isArray(list.rows)||list.rows.length!==362)throw new Error('মূল্যতালিকায় ৩৬২টি সারি থাকার কথা; পাওয়া গেছে '+(list.rows?.length??0)+'। কোনো পণ্য যোগ করা হয়নি।');
+    if(!Array.isArray(list.rows))throw new Error('মূল্যতালিকার সারি সঠিক ফরম্যাটে নেই। কোনো পণ্য যোগ করা হয়নি।');
+    // PDF extraction may include one extra heading/blank row. Count only actual product rows.
+    const validRows=list.rows.filter(r=>r&&String(r.name||'').trim()&&Array.isArray(r.prices)&&r.prices.length>=3&&r.prices.length<=5&&r.prices.some(v=>v!==null&&v!==undefined&&v!=='' )&&r.dieNo!==undefined&&r.dieNo!==null&&String(r.length??'').trim());
+    if(validRows.length!==362)throw new Error('যাচাই করা প্রকৃত পণ্য ৩৬২টি হওয়ার কথা; পাওয়া গেছে '+validRows.length+'টি। মোট সারি '+list.rows.length+'টি। নিরাপত্তার জন্য কোনো পণ্য যোগ করা হয়নি।');
     const targets=COMPANY_PROFILES.filter(c=>['al-kai','al-altech','al-chunghua','al-nikki','al-maxx'].includes(c.id));
     if(targets.length!==5)throw new Error('৫টি Aluminium কোম্পানির প্রোফাইল পাওয়া যায়নি।');
     const colorSets={3:['Silver','Bronze','S.S/Black'],4:['Silver','Bronze','S.S/Black','Powder Coated'],5:['Silver','Bronze','S.S/Black','Powder Coated','Woodtech']};
     const additions=[];
-    list.rows.forEach((r,index)=>{
-      const colors=colorSets[r.prices?.length]||[];
+    validRows.forEach((r,index)=>{
+      const colors=colorSets[r.prices.length]||[];
       r.prices.forEach((price,colorIndex)=>{
         const color=colors[colorIndex];if(!color||price===null||price===undefined||price==='')return;
-        const baseSku=[r.dieNo,r.length.replace(/[^A-Za-z0-9]/g,''),r.thickness||'STD',color.replace(/[^A-Za-z0-9]/g,''),r.sourcePage||index+1].join('-');
+        const baseSku=[r.dieNo,String(r.length??'').replace(/[^A-Za-z0-9]/g,''),r.thickness||'STD',color.replace(/[^A-Za-z0-9]/g,''),r.sourcePage||index+1].join('-');
         targets.forEach(company=>{
           additions.push({id:id(),companyId:company.id,name:r.name,family:r.name,sku:company.id+'-'+baseSku,variant:r.dieNo,size:r.length,color,thickness:r.thickness||'',spec:r.sourceSection||r.category,category:r.category||'Aluminium',categoryTags:[...new Set(['Aluminium',r.category||'Aluminium'])],sourcePage:r.sourcePage,sourceSection:r.sourceSection,sourceSerial:r.serial,unit:'Piece',stock:0,cost:Number(price),retail:0,wholesale:0,box:0,bundle:0,barcode:'',min:0,priceEffectiveDate:'2026-03-15',catalogSource:'Nikki Galaxy Price List 15-03-2026'});
         });
