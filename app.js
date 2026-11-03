@@ -122,7 +122,7 @@ $('importPriceList').onclick=async()=>{
     if(!Array.isArray(list.rows))throw new Error('মূল্যতালিকার সারি সঠিক ফরম্যাটে নেই। কোনো পণ্য যোগ করা হয়নি।');
     // PDF extraction may include one extra heading/blank row. Count only actual product rows.
     const validRows=list.rows.filter(r=>r&&String(r.name||'').trim()&&Array.isArray(r.prices)&&r.prices.length>=3&&r.prices.length<=5&&r.prices.some(v=>v!==null&&v!==undefined&&v!=='' )&&r.dieNo!==undefined&&r.dieNo!==null&&String(r.length??'').trim());
-    if(validRows.length!==362)throw new Error('যাচাই করা প্রকৃত পণ্য ৩৬২টি হওয়ার কথা; পাওয়া গেছে '+validRows.length+'টি। মোট সারি '+list.rows.length+'টি। নিরাপত্তার জন্য কোনো পণ্য যোগ করা হয়নি।');
+    if(validRows.length!==363)throw new Error('যাচাই করা প্রকৃত পণ্য ৩৬৩টি হওয়ার কথা; পাওয়া গেছে '+validRows.length+'টি। মোট সারি '+list.rows.length+'টি। নিরাপত্তার জন্য কোনো পণ্য যোগ করা হয়নি।');
     const targets=COMPANY_PROFILES.filter(c=>['al-kai','al-altech','al-chunghua','al-nikki','al-maxx'].includes(c.id));
     if(targets.length!==5)throw new Error('৫টি Aluminium কোম্পানির প্রোফাইল পাওয়া যায়নি।');
     const colorSets={3:['Silver','Bronze','S.S/Black'],4:['Silver','Bronze','S.S/Black','Powder Coated'],5:['Silver','Bronze','S.S/Black','Powder Coated','Woodtech']};
