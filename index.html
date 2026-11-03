@@ -1,7 +1,62 @@
 <!doctype html>
 <html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#14532d"><title>Madina Business Manager</title><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script><script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
-:root{--green:#14532d;--green2:#166534;--bg:#f3f6f4;--card:#fff;--ink:#17251c;--muted:#64746a;--line:#dce5de;--red:#b42318;--amber:#9a6700}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,"Noto Sans Bengali",sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:9px;padding:10px 13px;background:var(--green);color:white}button.secondary{background:#e8f0ea;color:var(--green);border:1px solid #c9dbce}button.danger{background:#fff0ef;color:var(--red);border:1px solid #f2c5c1}.top{background:var(--green);color:white;padding:15px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:5}.brand{font-weight:800;font-size:18px}.sub{font-size:12px;opacity:.8}.wrap{max-width:1200px;margin:auto;padding:16px}.layout{display:grid;grid-template-columns:220px 1fr;gap:16px}.side,.card{background:var(--card);border:1px solid var(--line);border-radius:14px}.side{padding:10px;height:max-content;position:sticky;top:76px}.nav{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);margin:3px 0}.nav.active{background:#e8f3eb;color:var(--green);font-weight:700}.main{min-width:0}.page{display:none}.page.active{display:block}.card{padding:15px;margin-bottom:14px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:#f7faf8;border:1px solid var(--line);border-radius:11px;padding:13px}.stat small{color:var(--muted)}.stat strong{display:block;font-size:23px;margin-top:4px}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:12px;color:var(--muted)}input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--ink)}textarea{min-height:70px}h2{font-size:20px;margin:0 0 13px}h3{font-size:15px;margin:0 0 10px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}th{background:#f6f9f7;color:#4d5d52}.tablewrap{overflow:auto}.muted{color:var(--muted)}.pill{font-size:11px;padding:3px 7px;border-radius:20px;background:#e8f3eb;color:var(--green)}.warn{color:var(--red)}.actions{display:flex;gap:6px;flex-wrap:wrap}.empty{padding:20px;text-align:center;color:var(--muted)}.hidden{display:none!important}.notice{background:#fff8e6;border:1px solid #f1dfa9;padding:11px;border-radius:9px;font-size:12px;color:#6c5300}.footer{font-size:11px;color:var(--muted);padding:8px}.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:15px;z-index:20}.modal.show{display:flex}.modalbox{background:white;border-radius:14px;padding:18px;max-width:520px;width:100%;max-height:90vh;overflow:auto}.right{margin-left:auto}.small{font-size:12px}.brandmark{font-size:25px}.hide-mobile{display:block}@media(max-width:760px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;overflow:auto;gap:4px}.nav{white-space:nowrap;width:auto;margin:0;font-size:12px}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.top{padding:12px}.wrap{padding:10px}.hide-mobile{display:none}}
-@media print{.top,.side,.no-print,button{display:none!important}.layout{display:block}.wrap{padding:0}.card{border:0}.page{display:none!important}#invoicePrint{display:block!important}body.print-a4 #invoicePrint{width:190mm;margin:0 auto;font-size:12pt}body.print-thermal80 #invoicePrint{width:72mm;margin:0;font-size:9pt}body.print-thermal58 #invoicePrint{width:52mm;margin:0;font-size:8pt}body.print-thermal80 #invoicePrint table,body.print-thermal58 #invoicePrint table{width:100%;font-size:inherit}body.print-thermal80 #invoicePrint th,body.print-thermal80 #invoicePrint td,body.print-thermal58 #invoicePrint th,body.print-thermal58 #invoicePrint td{padding:2px}}
+:root{--green:#0756a6;--green2:#0877d1;--bg:#edf4fc;--card:#fff;--ink:#101d38;--muted:#63738d;--line:#cbdcf1;--red:#c62836;--amber:#9a6700}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(135deg,#eef5ff,#f8fbff);color:var(--ink);font:15px system-ui,-apple-system,"Noto Sans Bengali",sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:0;border-radius:9px;padding:10px 13px;background:linear-gradient(135deg,#0868c5,#06468f);color:white;box-shadow:0 2px 5px #0b4c8c22}
+button:hover{filter:brightness(1.06)}
+button.secondary{background:#e8f2ff;color:#0756a6;border:1px solid #bdd6f4;box-shadow:none}
+button.danger{background:#fff0f0;color:var(--red);border:1px solid #f2c5c1;box-shadow:none}
+.top{background:linear-gradient(110deg,#06264f,#0756a6 62%,#0878cf);color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:5;box-shadow:0 4px 16px #082c5830}
+.brand{font-weight:850;font-size:20px;letter-spacing:.1px}
+.sub{font-size:12px;opacity:.86}
+.wrap{max-width:1600px;margin:auto;padding:18px}
+.layout{display:grid;grid-template-columns:230px 1fr;gap:17px}
+.side,.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 3px 12px #123c6810}
+.side{padding:10px;height:max-content;position:sticky;top:82px}
+.nav{display:block;width:100%;text-align:left;background:transparent;color:#183252;margin:3px 0;box-shadow:none;border-radius:9px}
+.nav:hover{background:#edf5ff}
+.nav.active{background:linear-gradient(90deg,#0756a6,#0877d1);color:white;font-weight:700}
+.main{min-width:0}
+.page{display:none}
+.page.active{display:block;animation:pageIn .18s ease-out}
+@keyframes pageIn{from{opacity:.75;transform:translateY(3px)}to{opacity:1;transform:none}}
+.card{padding:16px;margin-bottom:15px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:linear-gradient(135deg,#f7fbff,#eaf4ff);border:1px solid #c9def7;border-radius:12px;padding:15px}
+.stat small{color:var(--muted)}
+.stat strong{display:block;font-size:25px;margin-top:4px;color:#073d7a}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;color:var(--muted)}
+input,select,textarea{width:100%;padding:10px;border:1px solid #c8d8eb;border-radius:8px;background:white;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid #82b9f2;border-color:#3184d5}
+textarea{min-height:70px}
+h2{font-size:21px;margin:0 0 14px;color:#0b2d57}
+h3{font-size:16px;margin:0 0 10px;color:#12365f}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#edf5ff;color:#284c75}
+.tablewrap{overflow:auto}
+.muted{color:var(--muted)}
+.pill{font-size:11px;padding:3px 7px;border-radius:20px;background:#e5f1ff;color:#0756a6}
+.warn{color:var(--red)}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.empty{padding:20px;text-align:center;color:var(--muted)}
+.hidden{display:none!important}
+.notice{background:#fff8e6;border:1px solid #f1dfa9;padding:11px;border-radius:9px;font-size:12px;color:#6c5300}
+.footer{font-size:11px;color:var(--muted);padding:8px}
+.modal{position:fixed;inset:0;background:#071a33aa;display:none;align-items:center;justify-content:center;padding:15px;z-index:20}
+.modal.show{display:flex}
+.modalbox{background:white;border:1px solid var(--line);border-radius:14px;padding:18px;max-width:520px;width:100%;max-height:90vh;overflow:auto}
+.right{margin-left:auto}
+.small{font-size:12px}
+.brandmark{font-size:25px}
+.hide-mobile{display:block}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;overflow:auto;gap:4px}.nav{white-space:nowrap;width:auto;margin:0;font-size:12px}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.top{padding:12px}.wrap{padding:10px}}
+@media print{.top,.side,.no-print,button{display:none!important}.layout{display:block}.wrap{padding:0}.card{border:0;box-shadow:none}.page{display:none!important}#invoicePrint{display:block!important}body.print-a4 #invoicePrint{width:190mm;margin:0 auto;font-size:12pt}body.print-thermal80 #invoicePrint{width:72mm;margin:0;font-size:9pt}body.print-thermal58 #invoicePrint{width:52mm;margin:0;font-size:8pt}body.print-thermal80 #invoicePrint table,body.print-thermal58 #invoicePrint table{width:100%;font-size:inherit}body.print-thermal80 #invoicePrint th,body.print-thermal80 #invoicePrint td,body.print-thermal58 #invoicePrint th,body.print-thermal58 #invoicePrint td{padding:2px}}
 </style></head><body>
 <header class="top"><div><div class="brand">🏢 MADINA BUSINESS MANAGER</div><div class="sub">মদিনা থাই অ্যালুমিনিয়াম এন্ড এস এস গ্যালারি</div></div><div class="row"><select id="language" style="width:auto"><option value="bn">বাংলা</option><option value="en">English</option></select><button class="secondary" id="backupBtn">Backup</button></div><div class="row"><span id="cloudStatus" class="sub" style="padding:0 8px">☁️ Cloud: সংযোগের অপেক্ষায়</span><button id="logoutBtn" class="secondary hidden" type="button">লগআউট</button></div></header>
 <section id="authGate" style="max-width:460px;margin:24px auto;padding:18px;background:white;border:1px solid #dce5de;border-radius:14px">
