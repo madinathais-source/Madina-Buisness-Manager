@@ -4,7 +4,7 @@ function go(p){document.querySelectorAll('.page').forEach(x=>x.classList.toggle(
 function companyName(id){return COMPANY_PROFILES.find(c=>c.id===id)?.name||'পুরোনো / সাধারণ স্টক'}function refreshCompanyProductOptions(){const make=(co)=>db.products.filter(p=>p.companyId===co).map(p=>`<option value="${p.id}">${esc(productLabel(p))} (স্টক ${p.stock} ${p.unit})</option>`).join('');const b=$('buyCompany').value,sv=$('saleCompany').value,oldBuy=$('buyProduct').value,oldSale=$('saleProduct').value;$('buyProduct').innerHTML='<option value="">পণ্য নির্বাচন করুন</option>'+make(b);$('saleProduct').innerHTML='<option value="">পণ্য নির্বাচন করুন</option>'+make(sv);if(db.products.some(p=>p.id===oldBuy&&p.companyId===b))$('buyProduct').value=oldBuy;if(db.products.some(p=>p.id===oldSale&&p.companyId===sv))$('saleProduct').value=oldSale;updateSalePrice()}function productLabel(p){return [p.name,p.family&&p.family!==p.name?'['+p.family+']':'',p.variant,p.size,p.color,p.thickness,p.spec].filter(Boolean).join(' • ')}function renderProducts(){
  let q=$('productSearch').value.toLowerCase();
  const filtered=db.products.filter(p=>productLabel(p).toLowerCase().includes(q)||(p.sku+' '+p.barcode+' '+p.category+' '+p.family+' '+p.size+' '+p.thickness).toLowerCase().includes(q));
- const ss=filtered.filter(p=>String(p.sku||'').startsWith('SS201-'));
+ const ss=filtered.filter(p=>String(p.sku||'').startsWith('SS201-')||(['ss-steeltech','ss-hatim','ss-steelking','ss-grambangla','ss-psp'].includes(p.companyId)&&String(p.category||'').startsWith('SS Pipe')));
  const other=filtered.filter(p=>!String(p.sku||'').startsWith('SS201-'));
  let html='';
  if(ss.length){
