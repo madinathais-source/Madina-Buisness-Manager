@@ -92,33 +92,41 @@ $('importSSPipePrices').onclick=async()=>{
 };
 $('importPriceList').onclick=async()=>{
   db.settings=db.settings||{};
-  if(db.settings.priceList20260315ImportedAt){alert('১৫-০৩-২০২৬ তারিখের মূল্যতালিকা আগে থেকেই ইমপোর্ট করা হয়েছে।');return}
-  if(!confirm('PDF-এর ৩৬৩টি পণ্যের রংভিত্তিক ক্রয়মূল্য যোগ হবে। প্রতিটি পণ্যের স্টক ০ থাকবে এবং খুচরা/পাইকারি মূল্য ফাঁকা (০) থাকবে। চালিয়ে যাবেন?'))return;
+  if(db.settings.priceList20260315CompanyImportAt){alert('১৫-০৩-২০২৬ তারিখের কোম্পানিভিত্তিক মূল্যতালিকা আগে থেকেই ইমপোর্ট করা হয়েছে।');return}
+  if(!confirm('যাচাইকৃত ৩৬২টি PDF পণ্যের রংভিত্তিক মূল্য ৫টি Aluminium কোম্পানিতে আলাদা কপি হবে। প্রতিটি কপির স্টক ০ থাকবে; আগের পণ্য/লেনদেন মুছে ফেলা হবে না। চালাবেন?'))return;
   const btn=$('importPriceList');btn.disabled=true;btn.textContent='ইমপোর্ট হচ্ছে…';
   try{
     const response=await fetch('./price-list-2026-03-15.json.gz.b64',{cache:'no-store'});
-    if(!response.ok)throw new Error('মূল্যতালিকার ডেটা ফাইল পাওয়া যায়নি ('+response.status+')');
+    if(!response.ok)throw new Error('মূল্যতালিকার ডেটা ফাইল পাওয়া যায়নি ('+response.status+')');
     const encoded=(await response.text()).trim();
     const bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));
-    if(typeof DecompressionStream==='undefined')throw new Error('এই ব্রাউজারে gzip ডিকম্প্রেশন সমর্থিত নয়। Chrome আপডেট করে আবার চেষ্টা করুন।');
+    if(typeof DecompressionStream==='undefined')throw new Error('এই ব্রাউজারে gzip ডিকম্প্রেশন সমর্থিত নয়। Chrome আপডেট করে আবার চেষ্টা করুন।');
     const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
     const list=await new Response(stream).json();
+    if(!Array.isArray(list.rows)||list.rows.length!==362)throw new Error('মূল্যতালিকায় ৩৬২টি সারি থাকার কথা; পাওয়া গেছে '+(list.rows?.length??0)+'। কোনো পণ্য যোগ করা হয়নি।');
+    const targets=COMPANY_PROFILES.filter(c=>['al-kai','al-altech','al-chunghua','al-nikki','al-maxx'].includes(c.id));
+    if(targets.length!==5)throw new Error('৫টি Aluminium কোম্পানির প্রোফাইল পাওয়া যায়নি।');
     const colorSets={3:['Silver','Bronze','S.S/Black'],4:['Silver','Bronze','S.S/Black','Powder Coated'],5:['Silver','Bronze','S.S/Black','Powder Coated','Woodtech']};
-    let added=0;
+    const additions=[];
     list.rows.forEach((r,index)=>{
-      const colors=colorSets[r.prices.length]||[];
+      const colors=colorSets[r.prices?.length]||[];
       r.prices.forEach((price,colorIndex)=>{
-        const color=colors[colorIndex];if(!color)return;
-        const sku=[r.dieNo,r.length.replace(/[^A-Za-z0-9]/g,''),r.thickness||'STD',color.replace(/[^A-Za-z0-9]/g,''),index+1].join('-');
-        db.products.push({id:id(),name:r.name,family:r.name,sku,variant:r.dieNo,size:r.length,color,thickness:r.thickness||'',spec:r.category,category:'থাই অ্যালুমিনিয়াম',unit:'Piece',stock:0,cost:Number(price)||0,retail:0,wholesale:0,box:0,bundle:0,barcode:'',min:0,priceEffectiveDate:'2026-03-15'});
-        added++;
+        const color=colors[colorIndex];if(!color||price===null||price===undefined||price==='')return;
+        const baseSku=[r.dieNo,r.length.replace(/[^A-Za-z0-9]/g,''),r.thickness||'STD',color.replace(/[^A-Za-z0-9]/g,''),r.sourcePage||index+1].join('-');
+        targets.forEach(company=>{
+          additions.push({id:id(),companyId:company.id,name:r.name,family:r.name,sku:company.id+'-'+baseSku,variant:r.dieNo,size:r.length,color,thickness:r.thickness||'',spec:r.sourceSection||r.category,category:r.category||'Aluminium',categoryTags:[...new Set(['Aluminium',r.category||'Aluminium'])],sourcePage:r.sourcePage,sourceSection:r.sourceSection,sourceSerial:r.serial,unit:'Piece',stock:0,cost:Number(price),retail:0,wholesale:0,box:0,bundle:0,barcode:'',min:0,priceEffectiveDate:'2026-03-15',catalogSource:'Nikki Galaxy Price List 15-03-2026'});
+        });
       });
     });
-    db.settings.priceList20260315ImportedAt=new Date().toISOString();
-    db.settings.priceList20260315Source='Supplier price list effective 15-03-2026';
-    save();alert('সফলভাবে '+added+'টি রংভিত্তিক পণ্য ভ্যারিয়েন্ট যোগ হয়েছে। সব পণ্যের স্টক ০ রাখা হয়েছে।');
-  }catch(err){console.error('Price list import failed:',err);alert('ইমপোর্ট করা যায়নি: '+(err.message||err));}
-  finally{btn.disabled=false;btn.textContent='PDF মূল্যতালিকা ইমপোর্ট করুন';}
+    const existing=new Set(db.products.map(p=>[p.companyId,p.sku].join('|')));
+    const fresh=additions.filter(p=>!existing.has([p.companyId,p.sku].join('|')));
+    db.products.push(...fresh);
+    db.settings.priceList20260315CompanyImportAt=new Date().toISOString();
+    db.settings.priceList20260315Source='362 rows; Nikki + NAXX; 5 Aluminium company catalogs; effective 15-03-2026';
+    save();renderProducts();
+    alert('সফল: '+fresh.length+'টি কোম্পানিভিত্তিক রং/দৈর্ঘ্য ভ্যারিয়েন্ট যোগ হয়েছে। ৫টি কোম্পানিতে একই মূল্যতালিকা কপি হয়েছে; সব নতুন পণ্যের স্টক ০।');
+  }catch(err){console.error('Price list import failed:',err);alert('ইমপোর্ট করা যায়নি: '+(err.message||err));}
+  finally{btn.disabled=false;btn.textContent='৫ কোম্পানিতে PDF মূল্যতালিকা ইমপোর্ট করুন';}
 };
 document.body.addEventListener('change',e=>{const sel=e.target.closest('[data-assign-company]');if(!sel)return;const p=db.products.find(x=>x.id===sel.dataset.assignCompany);if(!p)return;const next=sel.value;if(!COMPANY_PROFILES.some(c=>c.id===next)&&next!=='legacy')return;p.companyId=next;save();});
 document.body.addEventListener('click',e=>{let b=e.target.closest('[data-editp]');if(b){let p=db.products.find(x=>x.id===b.dataset.editp);['id','name','family','sku','variant','size','color','thickness','spec','category','unit','stock','cost','retail','wholesale','box','bundle','barcode','min'].forEach(k=>{let el=$('p'+k[0].toUpperCase()+k.slice(1));if(el)el.value=p[k]});$('pCompany').value=p.companyId||'legacy';go('products')}let d=e.target.closest('[data-del]');if(d&&confirm('এই রেকর্ড মুছে ফেলবেন?')){db[d.dataset.del]=db[d.dataset.del].filter(x=>x.id!==d.dataset.id);save()}let iv=e.target.closest('[data-invoice]');if(iv)showInvoice(db.sales.find(s=>s.id===iv.dataset.invoice));});
