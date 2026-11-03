@@ -75,26 +75,35 @@ $('makeCompanyCatalogs').onclick=()=>{
 
 $('importSSPipePrices').onclick=async()=>{
  db.settings=db.settings||{};
- if(!confirm('SS Round, Box ও Rectangular Pipe-এর ২০১ গ্রেডের ২০২৬ সালের তালিকা নতুন করে সাজানো হবে। এই তালিকার আগের SS201 পণ্যগুলো প্রতিস্থাপিত হবে; অন্য পণ্য/স্টক অপরিবর্তিত থাকবে। চালাবেন?'))return;
+ if(db.settings.ssPipe201CompanyImportAt){alert('SS 201-এর পাঁচ কোম্পানির তালিকা আগে থেকেই সাজানো হয়েছে।');return}
+ if(!confirm('SS 201-এর Round, Box ও Rectangular Pipe-এর ২০২৬ সালের মূল্যতালিকা Steeltech, Hatim, Steel King, Gram Bangla ও PSP—৫টি কোম্পানিতে আলাদা কপি হবে। আগের SS201 পণ্য/লেনদেন মুছবে না; নতুন স্টক ০ থাকবে। চালাবেন?'))return;
  const b=$('importSSPipePrices');b.disabled=true;b.textContent='সাজানো হচ্ছে…';
  try{
-  const res=await fetch('./ss-pipe-purchase-prices-2026.json',{cache:'no-store'});if(!res.ok)throw new Error('দাম তালিকার ফাইল পাওয়া যায়নি');
-  const data=await res.json(),added=[];
-  const types=['Round Pipe','Box Pipe','Rectangular Pipe'];
+  const res=await fetch('./ss-pipe-purchase-prices-2026.json',{cache:'no-store'});if(!res.ok)throw new Error('দাম তালিকার ফাইল পাওয়া যায়নি ('+res.status+')');
+  const data=await res.json();if(!Array.isArray(data.rows)||!Array.isArray(data.thicknessMM))throw new Error('SS201 ফাইলের কাঠামো সঠিক নয়।');
+  const targets=COMPANY_PROFILES.filter(c=>['ss-steeltech','ss-hatim','ss-steelking','ss-grambangla','ss-psp'].includes(c.id));
+  if(targets.length!==5)throw new Error('৫টি SS কোম্পানির প্রোফাইল পাওয়া যায়নি।');
+  const additions=[];
   data.rows.forEach((r,ri)=>{
    const type=r.type,size=r.size;
-   r.prices.forEach((price,ti)=>{
+   (r.prices||[]).forEach((price,ti)=>{
     if(price===null||price===undefined||price==='')return;
-    const thickness=data.thicknessMM[ti],sku='SS201-'+(ri+1)+'-'+String(thickness).replace('.','_');
-    added.push({id:id(),name:'SS '+type+' '+size,family:'SS Pipe / '+type+' / '+size,sku,variant:'201 Grade',size,color:'',thickness:thickness+' MM',spec:'২০১ গ্রেড SS পাইপ',category:'SS Pipe / '+type,unit:'Piece',stock:0,cost:Number(price),retail:0,wholesale:0,box:0,bundle:0,barcode:'',min:0});
+    const thickness=data.thicknessMM[ti];if(thickness===undefined)return;
+    const baseSku='SS201-'+(ri+1)+'-'+String(thickness).replace('.','_');
+    targets.forEach(company=>additions.push({id:id(),companyId:company.id,name:'SS '+type+' '+size,family:'SS Pipe / '+type+' / '+size,sku:company.id+'-'+baseSku,variant:'201 Grade',size,color:'',thickness:thickness+' MM',spec:'২০১ গ্রেড SS পাইপ',category:'SS Pipe / '+type,categoryTags:['SS 201','SS Pipe',type],unit:'Piece',stock:0,cost:Number(price),retail:0,wholesale:0,box:0,bundle:0,barcode:'',min:0,catalogSource:'SS 201 Pipe Price List 2026'}));
    });
   });
-  db.products=db.products.filter(p=>!String(p.sku||'').startsWith('SS201-'));db.products.push(...added);
-  db.settings.ssPipe201PurchaseImportedAt=new Date().toISOString();db.settings.ssPipe201PurchaseSource='201 Grade SS Pipe Price List 2026';
-  save();$('productSearch').value='SS';renderProducts();
-  alert('সাজানো সম্পন্ন: '+added.length+'টি মূল্য। এখন SS Pipe-এর ধরন → সাইজ → MM পুরুত্ব অনুযায়ী গ্রুপে দেখা যাবে।');
+  const existing=new Set(db.products.map(p=>[p.companyId,p.sku].join('|')));
+  const fresh=additions.filter(p=>!existing.has([p.companyId,p.sku].join('|')));
+  if(!fresh.length)throw new Error('নতুন কোনো ভ্যারিয়েন্ট পাওয়া যায়নি; আগে তালিকা যোগ করা হয়ে থাকতে পারে।');
+  db.products.push(...fresh);
+  db.settings.ssPipe201CompanyImportAt=new Date().toISOString();
+  db.settings.ssPipe201PurchaseImportedAt=db.settings.ssPipe201CompanyImportAt;
+  db.settings.ssPipe201PurchaseSource='201 Grade SS Pipe Price List 2026; five company catalogs';
+  save();renderProducts();renderCompanyExportButtons();
+  alert('সাজানো সম্পন্ন: '+fresh.length+'টি SS201 রং/সাইজ/MM মূল্যভিত্তিক পণ্য ৫টি কোম্পানিতে যোগ হয়েছে। সব নতুন পণ্যের স্টক ০। আগের পণ্য অক্ষত আছে।');
  }catch(err){console.error(err);alert('দাম সাজানো যায়নি: '+(err.message||err))}
- finally{b.disabled=false;b.textContent='SS পাইপ ক্যাটাগরি / সাইজ / MM সাজান'}
+ finally{b.disabled=false;b.textContent='SS 201 মূল্যতালিকা ৫ কোম্পানিতে সাজান'}
 };
 $('importPriceList').onclick=async()=>{
   db.settings=db.settings||{};
