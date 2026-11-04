@@ -1,0 +1,20 @@
+{
+  "name": "Madina Business Manager",
+  "short_name": "Madina Manager",
+  "description": "মদিনা থাই অ্যালুমিনিয়াম এন্ড এস এস গ্যালারি",
+  "lang": "bn",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#edf4fc",
+  "theme_color": "#14532d",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
