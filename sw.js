@@ -1,5 +1,5 @@
-const CACHE_NAME='madina-manager-v1';
-const CORE=['./','./index.html','./app.js','./manifest.webmanifest','./icon.svg'];
+const CACHE_NAME='madina-manager-v2';
+const CORE=['./','./index.html','./app.js?v=20261105-2','./manifest.webmanifest','./icon.svg'];
 const EXTERNAL=[
  'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js',
  'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js',
