@@ -182,6 +182,24 @@ if($('dashboardAlCompanies'))$('dashboardAlCompanies').innerHTML=companyTiles(['
 if($('dashboardSSCompanies'))$('dashboardSSCompanies').innerHTML=companyTiles(['ss-steeltech','ss-hatim','ss-steelking','ss-grambangla','ss-psp'])||'<span class="muted small">কোম্পানি পাওয়া যায়নি</span>';
 if($('dashboardGlassCompanies'))$('dashboardGlassCompanies').innerHTML=companyTiles(['glass-nasir','glass-psp','glass-akij'])||'<span class="muted small">কোম্পানি পাওয়া যায়নি</span>';
 if($('dashboardHardwareCompanies'))$('dashboardHardwareCompanies').innerHTML=companyTiles(['al-hardware','ss-hardware'])||'<span class="muted small">কোম্পানি পাওয়া যায়নি</span>';
+if($('dashboardCategories')){
+ let fieldCounts={},valueCounts={};
+ db.products.forEach(p=>{
+  ['companyId','company_id','company','companyName','brand','supplier','category','type'].forEach(k=>{
+   const v=p?.[k];if(v===undefined||v===null||v==='')return;
+   fieldCounts[k]=(fieldCounts[k]||0)+1;
+   if(['companyId','company_id','company','companyName'].includes(k)){
+    const label=typeof v==='object'?String(v.id||v.name||v.companyName||JSON.stringify(v)):String(v);
+    const key=k+' = '+label;valueCounts[key]=(valueCounts[key]||0)+1;
+   }
+  });
+ });
+ const fields=Object.entries(fieldCounts).sort((a,b)=>b[1]-a[1]).map(([k,n])=>esc(k)+': '+n).join(' • ')||'কোনো কোম্পানি-সম্পর্কিত ঘর পাওয়া যায়নি';
+ const values=Object.entries(valueCounts).sort((a,b)=>b[1]-a[1]).slice(0,18).map(([k,n])=>'<div>'+esc(k)+' — '+n+'টি</div>').join('')||'কোম্পানির নাম/আইডি সংরক্ষিত নেই';
+ let diag=$('companyDataDiagnostic');
+ if(!diag){diag=document.createElement('div');diag.id='companyDataDiagnostic';diag.className='card';$('dashboardCategories').insertAdjacentElement('afterend',diag)}
+ diag.innerHTML='<h3>কোম্পানি ডেটা যাচাই</h3><p class="small muted">শুধু পণ্যের কোম্পানি-সম্পর্কিত তথ্যের গণনা; কোনো তথ্য পরিবর্তন করা হচ্ছে না।</p><p class="small"><b>মোট পণ্য:</b> '+db.products.length+'<br><b>কোন কোন ঘরে তথ্য আছে:</b> '+fields+'</p><div class="small">'+values+'</div>';
+}
 if($('dashboardCategories')){const cats=[['Aluminium',db.products.filter(p=>String(p.category||'').toLowerCase().includes('aluminium')||String(p.category||'').includes('অ্যালুমিন')).length],['SS 201 / SS Pipe',db.products.filter(p=>String(p.sku||'').startsWith('SS201-')||String(p.category||'').toLowerCase().includes('ss')).length],['Aluminium Hardware',db.products.filter(p=>p.companyId==='al-hardware').length],['SS Hardware',db.products.filter(p=>p.companyId==='ss-hardware').length],['Glass',db.products.filter(p=>String(p.category||'').includes('গ্লাস')||String(p.category||'').toLowerCase().includes('glass')).length]];$('dashboardCategories').innerHTML=cats.map(([n,v])=>'<div class="category-line"><span>'+esc(n)+'</span><b>'+Number(v).toLocaleString('bn-BD')+'</b></div>').join('')}
 if($('dashboardImports')){const imports=[['Nikki / NAXX PDF মূল্যতালিকা',!!db.settings?.priceList20260315CompanyImportAt],['SS 201 পাইপ মূল্যতালিকা',!!db.settings?.ssPipe201PurchaseImportedAt],['Supabase সিঙ্ক',!!currentUser]];$('dashboardImports').innerHTML=imports.map(([n,ok])=>'<div class="import-line"><span class="import-dot '+(ok?'done':'')+'"></span><span>'+esc(n)+'</span><b class="right">'+(ok?'সম্পন্ন':'এখনো নয়')+'</b></div>').join('')}
 $('rSales').textContent=money(total);$('rDue').textContent=money(due);$('rExpense').textContent=money(exp);$('rProfit').textContent=money(profit);updateIncomeReport();
