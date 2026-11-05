@@ -262,7 +262,7 @@ $('makeCompanyCatalogs').onclick=()=>{
 
 
 
-async async function repairAllCompanyPriceCatalogs(options={}){
+async function repairAllCompanyPriceCatalogs(options={}){
  const automatic=!!options.automatic;
  db.settings=db.settings||{};
  if(db.settings.companyCatalogRepairV3?.completedAt)return db.settings.companyCatalogRepairV3;
