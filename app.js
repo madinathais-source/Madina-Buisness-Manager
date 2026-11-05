@@ -262,10 +262,10 @@ $('makeCompanyCatalogs').onclick=()=>{
 
 
 
-async function repairAllCompanyPriceCatalogs(options={}){
+async async function repairAllCompanyPriceCatalogs(options={}){
  const automatic=!!options.automatic;
  db.settings=db.settings||{};
- if(db.settings.companyCatalogRepairV2?.completedAt)return db.settings.companyCatalogRepairV2;
+ if(db.settings.companyCatalogRepairV3?.completedAt)return db.settings.companyCatalogRepairV3;
  if(automatic&&(!currentUser||!navigator.onLine))return null;
  const btn=document.querySelector('[data-repair-company-catalogs]');
  const status=$('companyCatalogRepairStatus');
@@ -322,7 +322,7 @@ async function repairAllCompanyPriceCatalogs(options={}){
   db.settings.ssPipe201CompanyImportAt=db.settings.ssPipe201CompanyImportAt||completedAt;
   db.settings.ssPipe201PurchaseImportedAt=db.settings.ssPipe201PurchaseImportedAt||completedAt;
   db.settings.ssPipe201PurchaseSource='Hatim SS 201; same purchase-price catalog in 5 SS companies';
-  db.settings.companyCatalogRepairV2={completedAt,aluminiumAdded:alAdded,aluminiumUpdated:alUpdated,ssAdded,ssUpdated,aluminiumRows:validRows.length,ssRows:ssData.rows.length};
+  db.settings.companyCatalogRepairV3={completedAt,aluminiumAdded:alAdded,aluminiumUpdated:alUpdated,ssAdded,ssUpdated,aluminiumRows:validRows.length,ssRows:ssData.rows.length};
   save();renderProducts();renderCompanyExportButtons();
   const result=db.settings.companyCatalogRepairV2;
   const message='সম্পন্ন: Aluminium '+alAdded+'টি নতুন / '+alUpdated+'টি ক্রয়মূল্য হালনাগাদ; SS '+ssAdded+'টি নতুন / '+ssUpdated+'টি ক্রয়মূল্য হালনাগাদ। নতুন পণ্যের স্টক ০; পুরোনো স্টক, বিক্রয়মূল্য ও লেনদেন অক্ষত।';
