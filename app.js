@@ -220,7 +220,7 @@ if($('dashboardCategories')){
  const values=Object.entries(valueCounts).sort((a,b)=>b[1]-a[1]).slice(0,18).map(([k,n])=>'<div>'+esc(k)+' — '+n+'টি</div>').join('')||'কোম্পানির নাম/আইডি সংরক্ষিত নেই';
  let diag=$('companyDataDiagnostic');
  if(!diag){diag=document.createElement('div');diag.id='companyDataDiagnostic';diag.className='card';$('dashboardCategories').insertAdjacentElement('afterend',diag)}
- const history=Array.isArray(db.settings.companyAssignmentHistory)?db.settings.companyAssignmentHistory:[];const latest=history.length?history[history.length-1]:null;const undo=latest&&latest.moves?.length&&!latest.undoneAt?'<p><button type="button" class="secondary" data-undo-company-autoassign="1">কোম্পানিতে সাজানো আগের অবস্থায় ফিরিয়ে নিন ('+latest.moves.length+'টি)</button></p>':'';const legacy=db.products.filter(p=>(p.companyId||'legacy')==='legacy');const predicted={};legacy.forEach(p=>{const id=inferLegacyProductCompany(p);if(id)predicted[id]=(predicted[id]||0)+1});const predictedText=Object.entries(predicted).map(([id,n])=>'<div>'+esc(companyName(id))+': '+n+'টি</div>').join('')||'নাম দেখে এখনো কোনো কোম্পানি নিশ্চিতভাবে শনাক্ত হয়নি';const sample=legacy.slice(0,35).map((p,i)=>'<div style="padding:5px 0;border-bottom:1px solid #ddd">'+(i+1)+'. <b>'+esc(productLabel(p))+'</b> <span class="muted">| বিভাগ: '+esc(p.category||'-')+' | ব্র্যান্ড: '+esc(p.brand||p.manufacturer||'-')+' | SKU: '+esc(p.sku||'-')+'</span></div>').join('');diag.innerHTML='<h3>কোম্পানি ডেটা যাচাই</h3><p class="small muted">এখানে অবশিষ্ট পুরোনো পণ্যের নমুনা ও নাম দেখে সম্ভাব্য কোম্পানি দেখানো হয়েছে। এখনো কোনো নতুন পণ্য সরানো হচ্ছে না।</p><p class="small"><b>মোট পণ্য:</b> '+db.products.length+'<br><b>পুরোনো স্টকে:</b> '+legacy.length+'<br><b>কোন কোন ঘরে তথ্য আছে:</b> '+fields+'</p><div class="small">'+values+'</div><h4>নাম দেখে সম্ভাব্য কোম্পানি (শুধু হিসাব)</h4><div class="small">'+predictedText+'</div><h4>পুরোনো স্টকের প্রথম ৩৫টি পণ্যের নমুনা</h4><div class="small">'+sample+'</div>'+undo;
+ const history=Array.isArray(db.settings.companyAssignmentHistory)?db.settings.companyAssignmentHistory:[];const latest=history.length?history[history.length-1]:null;const undo=latest&&latest.moves?.length&&!latest.undoneAt?'<p><button type="button" class="secondary" data-undo-company-autoassign="1">কোম্পানিতে সাজানো আগের অবস্থায় ফিরিয়ে নিন ('+latest.moves.length+'টি)</button></p>':'';const legacy=db.products.filter(p=>(p.companyId||'legacy')==='legacy');const predicted={};legacy.forEach(p=>{const id=inferLegacyProductCompany(p);if(id)predicted[id]=(predicted[id]||0)+1});const predictedText=Object.entries(predicted).map(([id,n])=>'<div>'+esc(companyName(id))+': '+n+'টি</div>').join('')||'নাম দেখে এখনো কোনো কোম্পানি নিশ্চিতভাবে শনাক্ত হয়নি';const repairButton='<p><button type="button" class="primary" data-repair-company-catalogs>সব Aluminium ও SS কোম্পানিতে একই মূল্যতালিকা সাজান</button></p><p class="small muted">Nikki/NAXX-এর Aluminium ক্রয়মূল্য এবং Hatim-এর SS 201 ক্রয়মূল্য ৫+৫ কোম্পানিতে আলাদা পণ্য হিসেবে যোগ হবে। নতুন পণ্যের স্টক ০ থাকবে।</p>';const sample=legacy.slice(0,35).map((p,i)=>'<div style="padding:5px 0;border-bottom:1px solid #ddd">'+(i+1)+'. <b>'+esc(productLabel(p))+'</b> <span class="muted">| বিভাগ: '+esc(p.category||'-')+' | ব্র্যান্ড: '+esc(p.brand||p.manufacturer||'-')+' | SKU: '+esc(p.sku||'-')+'</span></div>').join('');diag.innerHTML='<h3>কোম্পানি ডেটা যাচাই</h3><p class="small muted">এখানে অবশিষ্ট পুরোনো পণ্যের নমুনা ও নাম দেখে সম্ভাব্য কোম্পানি দেখানো হয়েছে। এখনো কোনো নতুন পণ্য সরানো হচ্ছে না।</p><p class="small"><b>মোট পণ্য:</b> '+db.products.length+'<br><b>পুরোনো স্টকে:</b> '+legacy.length+'<br><b>কোন কোন ঘরে তথ্য আছে:</b> '+fields+'</p><div class="small">'+values+'</div><h4>নাম দেখে সম্ভাব্য কোম্পানি (শুধু হিসাব)</h4><div class="small">'+predictedText+'</div><h4>পুরোনো স্টকের প্রথম ৩৫টি পণ্যের নমুনা</h4><div class="small"'+sample+'</div>'+repairButton+undo;
 }
 if($('dashboardCategories')){const cats=[['Aluminium',db.products.filter(p=>String(p.category||'').toLowerCase().includes('aluminium')||String(p.category||'').includes('অ্যালুমিন')).length],['SS 201 / SS Pipe',db.products.filter(p=>String(p.sku||'').startsWith('SS201-')||String(p.category||'').toLowerCase().includes('ss')).length],['Aluminium Hardware',db.products.filter(p=>p.companyId==='al-hardware').length],['SS Hardware',db.products.filter(p=>p.companyId==='ss-hardware').length],['Glass',db.products.filter(p=>String(p.category||'').includes('গ্লাস')||String(p.category||'').toLowerCase().includes('glass')).length]];$('dashboardCategories').innerHTML=cats.map(([n,v])=>'<div class="category-line"><span>'+esc(n)+'</span><b>'+Number(v).toLocaleString('bn-BD')+'</b></div>').join('')}
 if($('dashboardImports')){const imports=[['Nikki / NAXX PDF মূল্যতালিকা',!!db.settings?.priceList20260315CompanyImportAt],['SS 201 পাইপ মূল্যতালিকা',!!db.settings?.ssPipe201PurchaseImportedAt],['Supabase সিঙ্ক',!!currentUser]];$('dashboardImports').innerHTML=imports.map(([n,ok])=>'<div class="import-line"><span class="import-dot '+(ok?'done':'')+'"></span><span>'+esc(n)+'</span><b class="right">'+(ok?'সম্পন্ন':'এখনো নয়')+'</b></div>').join('')}
@@ -258,6 +258,72 @@ $('makeCompanyCatalogs').onclick=()=>{
  try{db.products.push(...copies);save();alert('তালিকা তৈরি হয়েছে। '+copies.length+'টি পণ্য-কপি যোগ হয়েছে। সব কপির স্টক ০। অশনাক্ত পণ্য বাদ: '+unmatched+'টি।')}catch(err){console.error(err);alert('তালিকা তৈরি করা যায়নি: '+(err.message||err))}finally{b.disabled=false;b.textContent='সব কোম্পানির পণ্যের তালিকা তৈরি করুন'}
 };
 
+
+
+async function repairAllCompanyPriceCatalogs(){
+ const btn=document.querySelector('[data-repair-company-catalogs]');
+ if(btn){btn.disabled=true;btn.textContent='দাম তালিকা সাজানো হচ্ছে…'}
+ try{
+  const alRes=await fetch('./price-list-2026-03-15.json.gz.b64',{cache:'no-store'});
+  if(!alRes.ok)throw new Error('Nikki/NAXX অ্যালুমিনিয়াম মূল্যতালিকা ফাইল পাওয়া যায়নি');
+  const encoded=(await alRes.text()).trim(),bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));
+  if(typeof DecompressionStream==='undefined')throw new Error('Chrome-এ gzip ডিকম্প্রেশন সমর্থন নেই; Chrome আপডেট করুন');
+  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  const alList=await new Response(stream).json();
+  if(!Array.isArray(alList.rows))throw new Error('অ্যালুমিনিয়াম মূল্যতালিকার ডেটা সঠিক নয়');
+  const validRows=alList.rows.filter(r=>r&&String(r.name||'').trim()&&Array.isArray(r.prices)&&r.prices.length>=3&&r.prices.length<=5&&r.prices.some(v=>v!==null&&v!==undefined&&v!=='')&&r.dieNo!==undefined&&r.dieNo!==null&&String(r.length??'').trim());
+  if(validRows.length!==363)throw new Error('অ্যালুমিনিয়াম তালিকার ৩৬৩টি পণ্য যাচাই হয়নি; পাওয়া গেছে '+validRows.length+'টি');
+  const ssRes=await fetch('./ss-pipe-purchase-prices-2026.json',{cache:'no-store'});
+  if(!ssRes.ok)throw new Error('Hatim SS 201 মূল্যতালিকা ফাইল পাওয়া যায়নি');
+  const ssData=await ssRes.json();
+  if(!Array.isArray(ssData.rows)||!Array.isArray(ssData.thicknessMM))throw new Error('SS মূল্যতালিকার ডেটা সঠিক নয়');
+  const alTargets=COMPANY_PROFILES.filter(c=>['al-kai','al-altech','al-chunghua','al-nikki','al-maxx'].includes(c.id));
+  const ssTargets=COMPANY_PROFILES.filter(c=>['ss-steeltech','ss-hatim','ss-steelking','ss-grambangla','ss-psp'].includes(c.id));
+  if(alTargets.length!==5||ssTargets.length!==5)throw new Error('কোম্পানির তালিকা সম্পূর্ণ নয়');
+  const additions=[];
+  const existingSku=new Set(db.products.map(p=>[p.companyId||'legacy',p.sku||''].join('|')));
+  const norm=v=>String(v??'').trim().toLocaleLowerCase();
+  const sameAl=(p,r,color,price)=>norm(p.name)===norm(r.name)&&norm(p.variant)===norm(r.dieNo)&&norm(p.size)===norm(r.length)&&norm(p.color)===norm(color)&&norm(p.thickness)===norm(r.thickness||'')&&Number(p.cost||0)===Number(price);
+  const colors={3:['Silver','Bronze','S.S/Black'],4:['Silver','Bronze','S.S/Black','Powder Coated'],5:['Silver','Bronze','S.S/Black','Powder Coated','Woodtech']};
+  let alAdded=0,ssAdded=0;
+  validRows.forEach((r,index)=>{
+   (r.prices||[]).forEach((price,colorIndex)=>{
+    const color=(colors[r.prices.length]||[])[colorIndex];if(!color||price===null||price===undefined||price==='')return;
+    const baseSku=[r.dieNo,String(r.length??'').replace(/[^A-Za-z0-9]/g,''),r.thickness||'STD',color.replace(/[^A-Za-z0-9]/g,''),r.sourcePage||index+1].join('-');
+    alTargets.forEach(company=>{
+     const sku=company.id+'-'+baseSku,key=company.id+'|'+sku;
+     if(existingSku.has(key)||db.products.some(p=>p.companyId===company.id&&sameAl(p,r,color,price)))return;
+     additions.push({id:id(),companyId:company.id,name:r.name,family:r.name,sku,variant:r.dieNo,size:r.length,color,thickness:r.thickness||'',spec:r.sourceSection||r.category,category:r.category||'Aluminium',categoryTags:[...new Set(['Aluminium',r.category||'Aluminium'])],sourcePage:r.sourcePage,sourceSection:r.sourceSection,sourceSerial:r.serial,unit:'Piece',stock:0,cost:Number(price),retail:0,wholesale:0,box:0,bundle:0,barcode:'',min:0,priceEffectiveDate:'2026-03-15',catalogSource:'Nikki Galaxy Price List 15-03-2026'});
+     existingSku.add(key);alAdded++;
+    });
+   });
+  });
+  ssData.rows.forEach((r,ri)=>{
+   (r.prices||[]).forEach((price,ti)=>{
+    if(price===null||price===undefined||price==='')return;
+    const thickness=ssData.thicknessMM[ti];if(thickness===undefined)return;
+    const baseSku='SS201-'+(ri+1)+'-'+String(thickness).replace('.','_');
+    ssTargets.forEach(company=>{
+     const sku=company.id+'-'+baseSku,key=company.id+'|'+sku;
+     if(existingSku.has(key)||db.products.some(p=>p.companyId===company.id&&p.catalogSource==='SS 201 Pipe Price List 2026'&&p.sku===sku))return;
+     additions.push({id:id(),companyId:company.id,name:'SS '+r.type+' '+r.size,family:'SS Pipe / '+r.type+' / '+r.size,sku,variant:'201 Grade',size:r.size,color:'',thickness:thickness+' MM',spec:'২০১ গ্রেড SS পাইপ',category:'SS Pipe / '+r.type,categoryTags:['SS 201','SS Pipe',r.type],unit:'Piece',stock:0,cost:Number(price),retail:0,wholesale:0,box:0,bundle:0,barcode:'',min:0,catalogSource:'SS 201 Pipe Price List 2026'});
+     existingSku.add(key);ssAdded++;
+    });
+   });
+  });
+  if(!alAdded&&!ssAdded){alert('সব ১০টি কোম্পানির মূল্যতালিকা ইতিমধ্যে আছে। নতুন কিছু যোগ করা হয়নি।');return}
+  if(!confirm('Nikki-এর অ্যালুমিনিয়াম মূল্যতালিকা ৫ কোম্পানিতে এবং Hatim-এর SS 201 মূল্যতালিকা ৫ কোম্পানিতে যোগ হবে। নতুন পণ্য '+(alAdded+ssAdded)+'টি (Aluminium '+alAdded+', SS '+ssAdded+')। নতুন পণ্যের স্টক ০; পুরোনো স্টক, ক্রয়মূল্য, বিক্রয়মূল্য ও লেনদেন অক্ষত থাকবে। চালাবেন?'))return;
+  db.products.push(...additions);
+  db.settings=db.settings||{};
+  db.settings.companyCatalogRepairAt=new Date().toISOString();
+  db.settings.priceList20260315CompanyImportAt=db.settings.priceList20260315CompanyImportAt||db.settings.companyCatalogRepairAt;
+  db.settings.ssPipe201CompanyImportAt=db.settings.ssPipe201CompanyImportAt||db.settings.companyCatalogRepairAt;
+  db.settings.ssPipe201PurchaseImportedAt=db.settings.ssPipe201PurchaseImportedAt||db.settings.companyCatalogRepairAt;
+  save();renderProducts();renderCompanyExportButtons?.();
+  alert('সম্পন্ন। নতুন Aluminium পণ্য '+alAdded+'টি এবং SS পণ্য '+ssAdded+'টি ১০টি কোম্পানিতে যোগ হয়েছে। নতুন পণ্যের স্টক ০ রাখা হয়েছে।');
+ }catch(err){console.error('Company catalog repair:',err);alert('মূল্যতালিকা সাজানো যায়নি: '+(err.message||err))}
+ finally{if(btn){btn.disabled=false;btn.textContent='সব Aluminium ও SS কোম্পানিতে একই মূল্যতালিকা সাজান'}}
+}
 
 $('importSSPipePrices').onclick=async()=>{
  db.settings=db.settings||{};
