@@ -291,7 +291,7 @@ document.body.addEventListener('click',e=>{
  const nikki=counts.find(x=>x.company.id==='al-nikki')?.items||[];
  const kai=counts.find(x=>x.company.id==='al-kai')?.items||[];
  const sourceCounts=items=>{const m=new Map();items.forEach(p=>{const k=p.catalogSource||'উৎস উল্লেখ নেই';m.set(k,(m.get(k)||0)+1)});return [...m.entries()].sort((a,b)=>b[1]-a[1])};
- const norm=v=>String(v??'').toLocaleLowerCase().replace(/[\\s._-]+/g,' ').trim();
+ const norm=v=>String(v??'').toLocaleLowerCase().replace(/[\s._-]+/g,' ').trim();
  const identity=p=>[p.name,p.variant,p.size,p.color,p.thickness,p.spec,p.category].map(norm).join('|');
  const dupMap=new Map();nikki.forEach(p=>{const k=identity(p);if(k.replace(/\\|/g,''))dupMap.set(k,(dupMap.get(k)||0)+1)});
  const duplicates=[...dupMap.entries()].filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]);
@@ -305,7 +305,7 @@ document.body.addEventListener('click',e=>{
  html+='<p><b>Kai:</b> '+fmt(kai.length)+'টি &nbsp; <b>Nikki:</b> '+fmt(nikki.length)+'টি &nbsp; <b>পার্থক্য:</b> '+fmt(nikki.length-kai.length)+'টি</p>';
  html+='<h4>Nikki পণ্যের উৎসভিত্তিক হিসাব</h4><ul>'+sourceCounts(nikki).map(x=>'<li>'+esc(x[0])+': '+fmt(x[1])+'টি</li>').join('')+'</ul>';
  html+='<h4>আরও যাচাই প্রয়োজন</h4><ul><li>Nikki-তে একই পরিচয়ের সম্ভাব্য ডুপ্লিকেট: '+fmt(duplicates.reduce((n,x)=>n+x[1]-1,0))+'টি অতিরিক্ত রেকর্ড ('+fmt(duplicates.length)+'টি গ্রুপ)</li><li>Nikki-এর নাম/কোডের ইঙ্গিত অন্য কোম্পানিতে: '+fmt(otherWithNikkiClue.length)+'টি</li><li>Nikki-তে আছে, কিন্তু পণ্যের তথ্য/উৎসে Nikki ইঙ্গিত নেই: '+fmt(nikkiWithoutClue.length)+'টি</li><li>পুরোনো স্বয়ংক্রিয় বণ্টনের লগে Nikki-তে পাঠানো: '+fmt(movedToNikki)+'টি (এটি ঐতিহাসিক সংখ্যা; সবগুলো এখনো Nikki-তে আছে এমন নয়)</li></ul>';
- if(duplicates.length)html+='<details><summary>সম্ভাব্য ডুপ্লিকেটের নমুনা দেখুন</summary><ul>'+duplicates.slice(0,15).map(x=>'<li>'+esc(x[0].replace(/\\|/g,' • '))+' — '+fmt(x[1])+'টি</li>').join('')+'</ul></details>';
+ if(duplicates.length)html+='<details><summary>সম্ভাব্য ডুপ্লিকেটের নমুনা দেখুন</summary><ul>'+duplicates.slice(0,15).map(x=>'<li>'+esc(x[0].replace(/\|/g,' • '))+' — '+fmt(x[1])+'টি</li>').join('')+'</ul></details>';
  if(otherWithNikkiClue.length)html+='<details><summary>অন্য কোম্পানিতে Nikki ইঙ্গিত পাওয়া পণ্যের নমুনা</summary><ul>'+otherWithNikkiClue.slice(0,15).map(p=>'<li>'+esc(productLabel(p))+' — '+esc(companyName(canonicalCompanyId(p)))+'</li>').join('')+'</ul></details>';
  html+='<p class="muted">এটি সম্ভাব্য অসঙ্গতি শনাক্ত করে; একই নাম/সাইজ/রংয়ের পণ্যও ভিন্ন গ্রেড বা উৎসের কারণে বৈধভাবে আলাদা হতে পারে। কোনো রেকর্ড স্বয়ংক্রিয়ভাবে মুছে বা সরানো হয়নি।</p>';
  out.innerHTML=html;
