@@ -214,42 +214,6 @@ const inRange=d=>{let x=reportDate(d);return x&&x>=start&&x<=end};const sales=db
 const rows=[];if(mode==='year'){const y=Number($('incomeYear').value||today.getFullYear());for(let m=1;m<=12;m++){const key=y+'-'+String(m).padStart(2,'0');rows.push([key,db.sales.filter(x=>reportDate(x.date).startsWith(key)),db.expenses.filter(x=>reportDate(x.date).startsWith(key))])}}else rows.push([label,sales,expenses]);$('periodBreakdown').innerHTML=rows.map(([name,ss,ee])=>{const st=ss.reduce((n,x)=>n+(Number(x.total)||0),0),sp=ss.reduce((n,x)=>n+(Number(x.paid)||0),0),oi=ee.filter(x=>x.type==='অন্যান্য আয়').reduce((n,x)=>n+(Number(x.amount)||0),0),ex=ee.filter(x=>x.type==='ব্যয়').reduce((n,x)=>n+(Number(x.amount)||0),0),pr=ss.reduce((n,x)=>n+(Number(x.total)||0)-(Number(x.costTotal)||0),0)+oi-ex;return '<tr><td>'+esc(name)+'</td><td>'+money(st)+'</td><td>'+money(sp)+'</td><td>'+money(oi)+'</td><td>'+money(ex)+'</td><td>'+money(pr)+'</td></tr>'}).join('');window.currentIncomeReport={label,rows:rows.map(([name,ss,ee])=>[name,ss.reduce((n,x)=>n+(Number(x.total)||0),0),ss.reduce((n,x)=>n+(Number(x.paid)||0),0),ee.filter(x=>x.type==='অন্যান্য আয়').reduce((n,x)=>n+(Number(x.amount)||0),0),ee.filter(x=>x.type==='ব্যয়').reduce((n,x)=>n+(Number(x.amount)||0),0)])}}
 $('lowStock').innerHTML=db.products.filter(p=>p.stock<=p.min).map(p=>`<div class="warn">${esc(p.name)} — ${p.stock} ${p.unit}</div>`).join('')||'কম স্টকের পণ্য নেই।';$('recentSales').innerHTML=db.sales.slice(-5).reverse().map(s=>`<div class="row" style="padding:5px 0;border-bottom:1px solid var(--line)"><span>${s.invoice} • ${esc(s.customerName)}</span><b class="right">${money(s.total)}</b></div>`).join('')||'এখনো বিক্রয় নেই।';db.purchaseEstimates=db.purchaseEstimates||[];$('estimateHistoryRows').innerHTML=db.purchaseEstimates.slice().reverse().map(x=>`<tr><td>${esc(x.estimateNo)}<br><small>${esc(x.date)}</small></td><td>${esc(x.supplier||'—')}</td><td>${(x.lines||[]).map(v=>esc(v.name)).join('<br>')}</td><td>${money(x.total)}</td><td><button type="button" class="secondary" data-est-print="${x.id}">প্রিন্ট</button> <button type="button" class="secondary" data-est-share="${x.id}">WhatsApp</button></td></tr>`).join('');$('estimateHistoryEmpty').style.display=db.purchaseEstimates.length?'none':'block';if(migrated){persistLocalDb();if(currentUser&&!isApplyingCloud){clearTimeout(cloudTimer);cloudTimer=setTimeout(pushCloud,650)}}}
 $('productForm').onsubmit=e=>{e.preventDefault();let pid=$('pId').value,old=db.products.find(p=>p.id===pid);let p={id:pid||id(),companyId:$('pCompany').value||'legacy',name:$('pName').value.trim(),family:$('pFamily').value.trim()||$('pName').value.trim(),sku:$('pSku').value.trim(),variant:$('pVariant').value.trim(),size:$('pSize').value.trim(),color:$('pColor').value.trim(),thickness:$('pThickness').value.trim(),spec:$('pSpec').value.trim(),category:$('pCategory').value,unit:$('pUnit').value,stock:+$('pStock').value,cost:+$('pCost').value,retail:+$('pRetail').value,wholesale:+$('pWholesale').value,box:+$('pBox').value||0,bundle:+$('pBundle').value||0,barcode:$('pBarcode').value.trim(),min:+$('pMin').value||0};if(old)Object.assign(old,p);else db.products.push(p);$('productForm').reset();$('pId').value='';save();alert('পণ্য সংরক্ষণ হয়েছে');};$('clearProduct').onclick=()=>$('productForm').reset();$('productSearch').oninput=()=>{productPageLimit=50;renderProducts()};
-$('makeCompanyCatalogs').onclick=()=>{
- const signature=p=>[p.name,p.family,p.sku,p.variant,p.size,p.color,p.thickness,p.spec,p.category,p.unit,p.cost,p.retail,p.wholesale,p.box,p.bundle,p.barcode].map(v=>String(v??'').trim().toLowerCase()).join('|');
- const sources=[...new Map(db.products.map(p=>[signature(p),p])).values()];
- const copies=[];let aluminium=0,ss=0,hardware=0,unmatched=0;
- sources.forEach(src=>{
-  const cat=String(src.category||'').toLowerCase(),sku=String(src.sku||'').toUpperCase(),label=[src.name,src.family,src.spec,src.category].join(' ').toLowerCase();
-  let targets=[];
-  const isSS=sku.startsWith('SS201-')||cat.includes('ss')||cat.includes('স্টেইনলেস')||label.includes('স্টেইনলেস')||label.includes('stainless')||label.includes('ss pipe');
-  const isAl=cat.includes('অ্যালুমিন')||cat.includes('aluminium')||cat.includes('aluminum')||cat.includes('thai')||label.includes('অ্যালুমিন')||label.includes('aluminium')||label.includes('aluminum');
-  const isHardware=cat.includes('হার্ডওয়্যার')||cat.includes('হার্ডওয়্যার')||cat.includes('hardware')||label.includes('হার্ডওয়্যার')||label.includes('হার্ডওয়্যার')||label.includes('hardware');
-  const isGlass=cat.includes('গ্লাস')||cat.includes('glass')||label.includes('গ্লাস')||label.includes('glass');
-  if(isHardware){
-   const sourceCompany=canonicalCompanyId(src);
-   if(sourceCompany==='al-hardware'||(isAl&&!isSS))targets=COMPANY_PROFILES.filter(c=>c.id==='al-hardware');
-   else if(sourceCompany==='ss-hardware'||(isSS&&!isAl))targets=COMPANY_PROFILES.filter(c=>c.id==='ss-hardware');
-   else {unmatched++;return}
-   hardware++;
-  }
-  else if(isGlass){unmatched++;return}
-  else if(isSS){targets=COMPANY_PROFILES.filter(c=>c.type==='SS');ss++}
-  else if(isAl){targets=COMPANY_PROFILES.filter(c=>c.type==='Aluminium');aluminium++}
-  else {unmatched++;return}
-  targets.forEach(c=>{
-   if(db.products.some(p=>p.companyId===c.id&&signature(p)===signature(src)))return;
-   copies.push({...src,id:id(),companyId:c.id,catalogSourceId:src.catalogSourceId||src.id,stock:0});
-  });
- });
- if(!copies.length){alert('নতুন কোনো কপি তৈরি হয়নি। শনাক্ত পণ্য: Aluminium '+aluminium+', SS '+ss+', Hardware '+hardware+', অন্য/অশনাক্ত '+unmatched+'। কোম্পানির তালিকা আগে থেকেই থাকলে সেটিও কারণ হতে পারে।');return}
- if(!confirm('কোম্পানিভিত্তিক '+copies.length+'টি পণ্যের কপি তৈরি হবে। Aluminium উৎস '+aluminium+', SS উৎস '+ss+', Hardware উৎস '+hardware+'। প্রতিটি কপির স্টক ০ থাকবে; মূল পণ্য অপরিবর্তিত থাকবে। চালাবেন?'))return;
- const b=$('makeCompanyCatalogs');b.disabled=true;b.textContent='তালিকা তৈরি হচ্ছে…';
- try{db.products.push(...copies);save();alert('তালিকা তৈরি হয়েছে। '+copies.length+'টি পণ্য-কপি যোগ হয়েছে। সব কপির স্টক ০। অশনাক্ত পণ্য বাদ: '+unmatched+'টি।')}catch(err){console.error(err);alert('তালিকা তৈরি করা যায়নি: '+(err.message||err))}finally{b.disabled=false;b.textContent='সব কোম্পানির পণ্যের তালিকা তৈরি করুন'}
-};
-
-
-
-
 async function repairAllCompanyPriceCatalogs(options={}){
  const automatic=!!options.automatic;
  db.settings=db.settings||{};
@@ -320,79 +284,6 @@ async function repairAllCompanyPriceCatalogs(options={}){
 }
 
 
-$('importSSPipePrices').onclick=async()=>{
- db.settings=db.settings||{};
- if(db.settings.ssPipe201CompanyImportAt){alert('SS 201-এর পাঁচ কোম্পানির তালিকা আগে থেকেই সাজানো হয়েছে।');return}
- if(!confirm('SS 201-এর Round, Box ও Rectangular Pipe-এর ২০২৬ সালের মূল্যতালিকা Steeltech, Hatim, Steel King, Gram Bangla ও PSP—৫টি কোম্পানিতে আলাদা কপি হবে। আগের SS201 পণ্য/লেনদেন মুছবে না; নতুন স্টক ০ থাকবে। চালাবেন?'))return;
- const b=$('importSSPipePrices');b.disabled=true;b.textContent='সাজানো হচ্ছে…';
- try{
-  const res=await fetch('./ss-pipe-purchase-prices-2026.json',{cache:'no-store'});if(!res.ok)throw new Error('দাম তালিকার ফাইল পাওয়া যায়নি ('+res.status+')');
-  const data=await res.json();if(!Array.isArray(data.rows)||!Array.isArray(data.thicknessMM))throw new Error('SS201 ফাইলের কাঠামো সঠিক নয়।');
-  const targets=COMPANY_PROFILES.filter(c=>['ss-steeltech','ss-hatim','ss-steelking','ss-grambangla','ss-psp'].includes(c.id));
-  if(targets.length!==5)throw new Error('৫টি SS কোম্পানির প্রোফাইল পাওয়া যায়নি।');
-  const additions=[];
-  data.rows.forEach((r,ri)=>{
-   const type=r.type,size=r.size;
-   (r.prices||[]).forEach((price,ti)=>{
-    if(price===null||price===undefined||price==='')return;
-    const thickness=data.thicknessMM[ti];if(thickness===undefined)return;
-    const baseSku='SS201-'+(ri+1)+'-'+String(thickness).replace('.','_');
-    targets.forEach(company=>additions.push({id:id(),companyId:company.id,name:'SS '+type+' '+size,family:'SS Pipe / '+type+' / '+size,sku:company.id+'-'+baseSku,variant:'201 Grade',size,color:'',thickness:thickness+' MM',spec:'২০১ গ্রেড SS পাইপ',category:'SS Pipe / '+type,categoryTags:['SS 201','SS Pipe',type],unit:'Piece',stock:0,cost:Number(price),retail:0,wholesale:0,box:0,bundle:0,barcode:'',min:0,catalogSource:'SS 201 Pipe Price List 2026'}));
-   });
-  });
-  const existing=new Set(db.products.map(p=>[p.companyId,p.sku].join('|')));
-  const fresh=additions.filter(p=>!existing.has([p.companyId,p.sku].join('|')));
-  if(!fresh.length)throw new Error('নতুন কোনো ভ্যারিয়েন্ট পাওয়া যায়নি; আগে তালিকা যোগ করা হয়ে থাকতে পারে।');
-  db.products.push(...fresh);
-  db.settings.ssPipe201CompanyImportAt=new Date().toISOString();
-  db.settings.ssPipe201PurchaseImportedAt=db.settings.ssPipe201CompanyImportAt;
-  db.settings.ssPipe201PurchaseSource='201 Grade SS Pipe Price List 2026; five company catalogs';
-  save();renderProducts();renderCompanyExportButtons();
-  alert('সাজানো সম্পন্ন: '+fresh.length+'টি SS201 রং/সাইজ/MM মূল্যভিত্তিক পণ্য ৫টি কোম্পানিতে যোগ হয়েছে। সব নতুন পণ্যের স্টক ০। আগের পণ্য অক্ষত আছে।');
- }catch(err){console.error(err);alert('দাম সাজানো যায়নি: '+(err.message||err))}
- finally{b.disabled=false;b.textContent='SS 201 মূল্যতালিকা ৫ কোম্পানিতে সাজান'}
-};
-$('importPriceList').onclick=async()=>{
-  db.settings=db.settings||{};
-  if(db.settings.priceList20260315CompanyImportAt){alert('১৫-০৩-২০২৬ তারিখের কোম্পানিভিত্তিক মূল্যতালিকা আগে থেকেই ইমপোর্ট করা হয়েছে।');return}
-  if(!confirm('যাচাইকৃত ৩৬২টি PDF পণ্যের রংভিত্তিক মূল্য ৫টি Aluminium কোম্পানিতে আলাদা কপি হবে। প্রতিটি কপির স্টক ০ থাকবে; আগের পণ্য/লেনদেন মুছে ফেলা হবে না। চালাবেন?'))return;
-  const btn=$('importPriceList');btn.disabled=true;btn.textContent='ইমপোর্ট হচ্ছে…';
-  try{
-    const response=await fetch('./price-list-2026-03-15.json.gz.b64',{cache:'no-store'});
-    if(!response.ok)throw new Error('মূল্যতালিকার ডেটা ফাইল পাওয়া যায়নি ('+response.status+')');
-    const encoded=(await response.text()).trim();
-    const bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));
-    if(typeof DecompressionStream==='undefined')throw new Error('এই ব্রাউজারে gzip ডিকম্প্রেশন সমর্থিত নয়। Chrome আপডেট করে আবার চেষ্টা করুন।');
-    const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-    const list=await new Response(stream).json();
-    if(!Array.isArray(list.rows))throw new Error('মূল্যতালিকার সারি সঠিক ফরম্যাটে নেই। কোনো পণ্য যোগ করা হয়নি।');
-    // PDF extraction may include one extra heading/blank row. Count only actual product rows.
-    const validRows=list.rows.filter(r=>r&&String(r.name||'').trim()&&Array.isArray(r.prices)&&r.prices.length>=3&&r.prices.length<=5&&r.prices.some(v=>v!==null&&v!==undefined&&v!=='' )&&r.dieNo!==undefined&&r.dieNo!==null&&String(r.length??'').trim());
-    if(validRows.length!==363)throw new Error('যাচাই করা প্রকৃত পণ্য ৩৬৩টি হওয়ার কথা; পাওয়া গেছে '+validRows.length+'টি। মোট সারি '+list.rows.length+'টি। নিরাপত্তার জন্য কোনো পণ্য যোগ করা হয়নি।');
-    const targets=COMPANY_PROFILES.filter(c=>['al-kai','al-altech','al-chunghua','al-nikki','al-maxx'].includes(c.id));
-    if(targets.length!==5)throw new Error('৫টি Aluminium কোম্পানির প্রোফাইল পাওয়া যায়নি।');
-    const colorSets={3:['Silver','Bronze','S.S/Black'],4:['Silver','Bronze','S.S/Black','Powder Coated'],5:['Silver','Bronze','S.S/Black','Powder Coated','Woodtech']};
-    const additions=[];
-    validRows.forEach((r,index)=>{
-      const colors=colorSets[r.prices.length]||[];
-      r.prices.forEach((price,colorIndex)=>{
-        const color=colors[colorIndex];if(!color||price===null||price===undefined||price==='')return;
-        const baseSku=[r.dieNo,String(r.length??'').replace(/[^A-Za-z0-9]/g,''),r.thickness||'STD',color.replace(/[^A-Za-z0-9]/g,''),r.sourcePage||index+1].join('-');
-        targets.forEach(company=>{
-          additions.push({id:id(),companyId:company.id,name:r.name,family:r.name,sku:company.id+'-'+baseSku,variant:r.dieNo,size:r.length,color,thickness:r.thickness||'',spec:r.sourceSection||r.category,category:r.category||'Aluminium',categoryTags:[...new Set(['Aluminium',r.category||'Aluminium'])],sourcePage:r.sourcePage,sourceSection:r.sourceSection,sourceSerial:r.serial,unit:'Piece',stock:0,cost:Number(price),retail:0,wholesale:0,box:0,bundle:0,barcode:'',min:0,priceEffectiveDate:'2026-03-15',catalogSource:'Nikki Galaxy Price List 15-03-2026'});
-        });
-      });
-    });
-    const existing=new Set(db.products.map(p=>[p.companyId,p.sku].join('|')));
-    const fresh=additions.filter(p=>!existing.has([p.companyId,p.sku].join('|')));
-    db.products.push(...fresh);
-    db.settings.priceList20260315CompanyImportAt=new Date().toISOString();
-    db.settings.priceList20260315Source='362 rows; Nikki + NAXX; 5 Aluminium company catalogs; effective 15-03-2026';
-    save();renderProducts();
-    alert('সফল: '+fresh.length+'টি কোম্পানিভিত্তিক রং/দৈর্ঘ্য ভ্যারিয়েন্ট যোগ হয়েছে। ৫টি কোম্পানিতে একই মূল্যতালিকা কপি হয়েছে; সব নতুন পণ্যের স্টক ০।');
-  }catch(err){console.error('Price list import failed:',err);alert('ইমপোর্ট করা যায়নি: '+(err.message||err));}
-  finally{btn.disabled=false;btn.textContent='৫ কোম্পানিতে PDF মূল্যতালিকা ইমপোর্ট করুন';}
-};
 document.body.addEventListener('click',e=>{if(e.target.closest('#loadMoreProducts')){productPageLimit+=50;renderProducts()}});document.body.addEventListener('change',e=>{const sel=e.target.closest('[data-assign-company]');if(!sel)return;const p=db.products.find(x=>x.id===sel.dataset.assignCompany);if(!p)return;const next=sel.value;if(!COMPANY_PROFILES.some(c=>c.id===next)&&next!=='legacy')return;p.companyId=next;save();});
 document.body.addEventListener('click',e=>{const b=e.target.closest('[data-restore-product]');if(!b)return;const p=(db.archivedProducts||[]).find(x=>x.id===b.dataset.restoreProduct);if(!p)return;if(!confirm('এই পণ্যটি আবার সক্রিয় তালিকায় ফিরিয়ে আনবেন?'))return;db.products.push({...p});db.archivedProducts=db.archivedProducts.filter(x=>x.id!==p.id);db.trash=(db.trash||[]).filter(t=>!(t.kind==='products'&&t.record?.id===p.id));save();renderArchivedProducts();});
 document.body.addEventListener('click',e=>{
