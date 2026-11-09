@@ -293,7 +293,7 @@ document.body.addEventListener('click',e=>{
  const sourceCounts=items=>{const m=new Map();items.forEach(p=>{const k=p.catalogSource||'উৎস উল্লেখ নেই';m.set(k,(m.get(k)||0)+1)});return [...m.entries()].sort((a,b)=>b[1]-a[1])};
  const norm=v=>String(v??'').toLocaleLowerCase().replace(/[\s._-]+/g,' ').trim();
  const identity=p=>[p.name,p.variant,p.size,p.color,p.thickness,p.spec,p.category].map(norm).join('|');
- const dupMap=new Map();nikki.forEach(p=>{const k=identity(p);if(k.replace(/\\|/g,''))dupMap.set(k,(dupMap.get(k)||0)+1)});
+ const dupMap=new Map();nikki.forEach(p=>{const k=identity(p);if(k.replace(/\|/g,''))dupMap.set(k,(dupMap.get(k)||0)+1)});
  const duplicates=[...dupMap.entries()].filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]);
  const nikkiClue=p=>/nikki|naxx|নিক্কি|নিকি/i.test([p.name,p.family,p.sku,p.brand,p.manufacturer,p.supplierName,p.description,p.notes,p.catalogSource].filter(Boolean).join(' '));
  const otherWithNikkiClue=db.products.filter(p=>canonicalCompanyId(p)!=='al-nikki'&&nikkiClue(p));
