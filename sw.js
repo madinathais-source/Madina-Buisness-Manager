@@ -1,5 +1,5 @@
-const CACHE_NAME='madina-manager-v21';
-const CORE=['./','./index.html','./app.js?v=20261109-21','./manifest.webmanifest','./icon.svg','./price-list-2026-03-15.json.gz.b64','./ss-pipe-purchase-prices-2026.json'];
+const CACHE_NAME='madina-manager-v22';
+const CORE=['./','./index.html','./app.js?v=20261115-22','./manifest.webmanifest','./icon.svg','./price-list-2026-03-15.json.gz.b64','./ss-pipe-purchase-prices-2026.json','./order.html'];
 const EXTERNAL=[
  'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js',
  'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js',
@@ -22,7 +22,7 @@ self.addEventListener('fetch',event=>{
  if(url.origin===self.location.origin){
   event.respondWith((async()=>{
    try{const response=await fetch(request);if(response&&response.ok){const cache=await caches.open(CACHE_NAME);await cache.put(request,response.clone()).catch(()=>{})}return response}
-   catch(error){const cached=await caches.match(request);if(cached)return cached;if(request.mode==='navigate')return (await caches.match('./index.html'))||(await caches.match('./'));return Response.error()}
+   catch(error){const cached=await caches.match(request);if(cached)return cached;if(request.mode==='navigate'){const fallback=url.pathname.endsWith('/order.html')?'./order.html':'./index.html';return (await caches.match(fallback))||(await caches.match('./'))}return Response.error()}
   })());return;
  }
  if(EXTERNAL.includes(url.href)){
