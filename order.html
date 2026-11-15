@@ -16,5 +16,71 @@
 *{box-sizing:border-box}body{margin:0;background:#f3f6f4;color:#17251c;font:16px system-ui,"Noto Sans Bengali",sans-serif}.wrap{max-width:620px;margin:28px auto;padding:16px}.card{background:white;border:1px solid #dce5de;border-radius:16px;padding:22px;box-shadow:0 8px 28px #143d2410}h1{font-size:23px;margin:0 0 5px;color:#14532d}.muted{color:#64746a;font-size:14px}.field{margin:14px 0}label{display:block;font-weight:600;margin-bottom:6px}input,textarea{width:100%;padding:12px;border:1px solid #cbd8ce;border-radius:9px;font:inherit}button{width:100%;padding:13px;border:0;border-radius:9px;background:#14532d;color:white;font:inherit;font-weight:700}#msg{margin-top:14px;padding:10px;border-radius:8px}.ok{background:#e8f5eb;color:#14532d}.err{background:#fff0ef;color:#b42318}
 </style></head><body><main class="wrap"><div class="card"><h1>মদিনা থাই অ্যালুমিনিয়াম এন্ড এস এস গ্যালারি</h1><p class="muted">অনলাইনে অর্ডার করতে নিচের তথ্য পূরণ করুন। অর্ডার যাচাই করে দোকান থেকে যোগাযোগ করা হবে।</p><form id="orderForm"><div class="field"><label>আপনার নাম *</label><input id="name" required maxlength="120"></div><div class="field"><label>মোবাইল নম্বর *</label><input id="phone" required inputmode="tel" maxlength="30"></div><div class="field"><label>ডেলিভারি ঠিকানা</label><textarea id="address" rows="2" maxlength="500"></textarea></div><div class="field"><label>কোন পণ্য / কী কাজ করতে চান? *</label><textarea id="items" rows="3" required maxlength="2000" placeholder="পণ্যের নাম, পরিমাণ, মাপ বা কাজের বিবরণ"></textarea></div><div class="field"><label>অতিরিক্ত কথা (ঐচ্ছিক)</label><textarea id="notes" rows="2" maxlength="1000"></textarea></div><button id="submitBtn">অর্ডার পাঠান</button></form><div id="msg" hidden></div><section id="trackBox" hidden style="margin-top:18px;border-top:1px solid #dce5de;padding-top:16px"><h2 style="font-size:18px">অর্ডার ট্র্যাক করুন</h2><p class="muted">আপনার ট্র্যাকিং নম্বর দিয়ে অর্ডারের অবস্থা দেখুন।</p><div class="field"><label>ট্র্যাকিং নম্বর</label><input id="trackId" placeholder="অর্ডার নম্বর"></div><button type="button" id="trackBtn">অবস্থা দেখুন</button><div id="trackResult" style="margin-top:12px"></div></section><p class="muted">অর্ডার পাঠানোর পর পাওয়া ট্র্যাকিং নম্বরটি সংরক্ষণ করুন। দোকান থেকে নিশ্চিত না করা পর্যন্ত অর্ডার চূড়ান্ত নয়।</p></div></main>
 <script>
-(()=>{const client=window.supabase.createClient("https://vgojtclskrjxlqfrecxk.supabase.co","sb_publishable_3PbzagUEN9y7OJdnbCL2Hg_l_NKoBcY");const token="34146727-4d91-4d72-b067-b83d5b86629e";const form=document.getElementById('orderForm'),btn=document.getElementById('submitBtn'),msg=document.getElementById('msg'),trackBox=document.getElementById('trackBox'),trackId=document.getElementById('trackId'),trackResult=document.getElementById('trackResult');const labels={"নতুন অর্ডার":"অর্ডার গ্রহণের অপেক্ষায়","নিশ্চিত":"অর্ডার নিশ্চিত হয়েছে","প্যাকিং":"পণ্য প্রস্তুত/প্যাকিং চলছে","পথে":"অর্ডার ডেলিভারির পথে","ডেলিভারি সম্পন্ন":"অর্ডার ডেলিভারি সম্পন্ন হয়েছে","বাতিল":"অর্ডার বাতিল করা হয়েছে"};async function track(id){trackResult.textContent="অবস্থা খোঁজা হচ্ছে…";const {data,error}=await client.rpc('get_public_order_status',{p_order_id:id,p_store_token:token});const row=Array.isArray(data)?data[0]:data;if(error||!row){trackResult.textContent="অর্ডার পাওয়া যায়নি। ট্র্যাকিং নম্বরটি পরীক্ষা করুন।";return}trackResult.innerHTML="<b>অর্ডার নম্বর:</b> "+row.id+"<br><b>অবস্থা:</b> "+(labels[row.status]||row.status||labels["নতুন অর্ডার"])+"<br><b>বিবরণ:</b> "+String(row.items||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))+"<br><small>সর্বশেষ অবস্থা দেখতে আবার ‘অবস্থা দেখুন’ চাপুন।</small>";}document.getElementById('trackBtn').addEventListener('click',()=>track(trackId.value.trim()));form.addEventListener('submit',async e=>{e.preventDefault();btn.disabled=true;btn.textContent='পাঠানো হচ্ছে…';msg.hidden=true;const {data,error}=await client.from('public_order_requests').insert({store_token:token,customer_name:document.getElementById('name').value.trim(),phone:document.getElementById('phone').value.trim(),address:document.getElementById('address').value.trim(),items:document.getElementById('items').value.trim(),notes:document.getElementById('notes').value.trim()}).select('id').single();btn.disabled=false;btn.textContent='অর্ডার পাঠান';msg.hidden=false;if(error){msg.className='err';msg.textContent='অর্ডার পাঠানো যায়নি। অনুগ্রহ করে পরে আবার চেষ্টা করুন।';return}msg.className='ok';msg.textContent='আপনার অর্ডারের অনুরোধ গ্রহণ করা হয়েছে। ট্র্যাকিং নম্বর: '+data.id;trackId.value=data.id;trackBox.hidden=false;track(data.id);form.reset()})})();
+(()=>{'use strict';
+const SUPABASE_URL="https://vgojtclskrjxlqfrecxk.supabase.co";
+const SUPABASE_KEY="sb_publishable_3PbzagUEN9y7OJdnbCL2Hg_l_NKoBcY";
+const token="34146727-4d91-4d72-b067-b83d5b86629e";
+const QUEUE_KEY="madina_public_order_queue_v1";
+const client=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+const $=id=>document.getElementById(id),form=$('orderForm'),btn=$('submitBtn'),msg=$('msg'),trackBox=$('trackBox'),trackId=$('trackId'),trackResult=$('trackResult');
+const labels={"নতুন অর্ডার":"অর্ডার গ্রহণের অপেক্ষায়","নিশ্চিত":"অর্ডার নিশ্চিত হয়েছে","প্যাকিং":"পণ্য প্রস্তুত/প্যাকিং চলছে","পথে":"অর্ডার ডেলিভারির পথে","ডেলিভারি সম্পন্ন":"অর্ডার ডেলিভারি সম্পন্ন হয়েছে","বাতিল":"অর্ডার বাতিল করা হয়েছে"};
+const readQueue=()=>{try{const q=JSON.parse(localStorage.getItem(QUEUE_KEY)||"[]");return Array.isArray(q)?q:[]}catch{return []}};
+const writeQueue=q=>localStorage.setItem(QUEUE_KEY,JSON.stringify(q));
+function showMessage(text,kind){msg.hidden=false;msg.className=kind;msg.textContent=text}
+function newLocalId(){return "LOCAL-"+Date.now().toString(36).toUpperCase()+"-"+Math.random().toString(36).slice(2,7).toUpperCase()}
+async function track(id){
+ if(!client||!navigator.onLine){trackResult.textContent="অর্ডারের অবস্থা দেখতে ইন্টারনেট সংযোগ প্রয়োজন।";return}
+ trackResult.textContent="অবস্থা খোঁজা হচ্ছে…";
+ const {data,error}=await client.rpc('get_public_order_status',{p_order_id:id,p_store_token:token});
+ const row=Array.isArray(data)?data[0]:data;
+ if(error||!row){trackResult.textContent="অর্ডার পাওয়া যায়নি। ট্র্যাকিং নম্বরটি পরীক্ষা করুন।";return}
+ trackResult.textContent="";
+ const line=document.createElement("div");
+ const title=document.createElement("b");title.textContent="অর্ডার নম্বর: "+row.id;
+ const status=document.createElement("p");status.textContent="অবস্থা: "+(labels[row.status]||row.status||labels["নতুন অর্ডার"]);
+ const details=document.createElement("p");details.textContent="বিবরণ: "+String(row.items||"");
+ const note=document.createElement("small");note.textContent="সর্বশেষ অবস্থা দেখতে আবার ‘অবস্থা দেখুন’ চাপুন।";
+ line.append(title,status,details,note);trackResult.append(line);
+}
+$('trackBtn').addEventListener('click',()=>track(trackId.value.trim()));
+async function sendOrder(order){
+ if(!client)throw new Error("সার্ভার লাইব্রেরি পাওয়া যায়নি। ইন্টারনেটসহ আবার চেষ্টা করুন।");
+ const {data,error}=await client.from('public_order_requests').insert({store_token:token,customer_name:order.name,phone:order.phone,address:order.address,items:order.items,notes:order.notes}).select('id').single();
+ if(error)throw error;
+ return data.id;
+}
+form.addEventListener('submit',async e=>{
+ e.preventDefault();
+ const order={name:$('name').value.trim(),phone:$('phone').value.trim(),address:$('address').value.trim(),items:$('items').value.trim(),notes:$('notes').value.trim()};
+ if(!order.name||!order.phone||!order.items){showMessage("নাম, মোবাইল ও পণ্যের বিবরণ পূরণ করুন।","err");return}
+ btn.disabled=true;btn.textContent="অর্ডার পাঠানো হচ্ছে…";
+ try{
+  if(!navigator.onLine||!client){
+   const localId=newLocalId(),q=readQueue();q.push({...order,localId,createdAt:new Date().toISOString()});writeQueue(q);
+   showMessage("ইন্টারনেট নেই। অর্ডারটি এই ফোনে সাময়িকভাবে রাখা হয়েছে। ইন্টারনেট ফিরলে নিচের ‘অপেক্ষমাণ অর্ডার পাঠান’ বোতাম চাপুন। ট্র্যাকিং নম্বর: "+localId,"ok");
+   trackId.value=localId;trackBox.hidden=false;form.reset();renderQueue();return;
+  }
+  const id=await sendOrder(order);
+  showMessage("আপনার অর্ডারের অনুরোধ গ্রহণ করা হয়েছে। ট্র্যাকিং নম্বর: "+id,"ok");
+  trackId.value=id;trackBox.hidden=false;form.reset();track(id);
+ }catch(error){showMessage("অর্ডার পাঠানো যায়নি। আপনার তথ্য এই ফোনে অপেক্ষমাণ হিসেবে রাখা হবে। পরে আবার পাঠাতে পারবেন।","err");
+  try{const localId=newLocalId(),q=readQueue();q.push({...order,localId,createdAt:new Date().toISOString()});writeQueue(q);trackId.value=localId;trackBox.hidden=false;renderQueue()}catch(storageError){showMessage("অর্ডার পাঠানো যায়নি এবং ফোনে সংরক্ষণও সম্ভব হয়নি। দয়া করে তথ্য কপি করে রাখুন।","err")}
+ }finally{btn.disabled=false;btn.textContent="অর্ডার পাঠান"}
+});
+function renderQueue(){
+ let box=$('queuedOrders');if(!box){box=document.createElement('section');box.id='queuedOrders';box.style.cssText='margin-top:18px;border-top:1px solid #dce5de;padding-top:14px';form.parentNode.insertBefore(box,form.nextSibling)}
+ const q=readQueue();box.replaceChildren();if(!q.length){box.hidden=true;return}box.hidden=false;
+ const heading=document.createElement('h2');heading.style.fontSize='18px';heading.textContent='ইন্টারনেটের অপেক্ষায় থাকা অর্ডার ('+q.length+')';box.append(heading);
+ const help=document.createElement('p');help.className='muted';help.textContent='এই অর্ডারগুলো এখনও দোকানে পৌঁছেনি। ইন্টারনেট চালু হলে পাঠান।';box.append(help);
+ q.forEach(o=>{const p=document.createElement('p');p.className='muted';p.textContent=o.localId+' • '+o.name+' • '+o.phone;box.append(p)});
+ const send=document.createElement('button');send.type='button';send.textContent='অপেক্ষমাণ অর্ডার পাঠান';send.disabled=!navigator.onLine||!client;send.addEventListener('click',async()=>{
+  send.disabled=true;send.textContent='পাঠানো হচ্ছে…';let remaining=readQueue(),sent=0;
+  for(const o of remaining.slice()){try{const id=await sendOrder(o);remaining=remaining.filter(x=>x.localId!==o.localId);writeQueue(remaining);sent++;trackId.value=id;trackBox.hidden=false}catch(err){break}}
+  renderQueue();showMessage(sent?sent+'টি অপেক্ষমাণ অর্ডার সার্ভারে পাঠানো হয়েছে।':'অর্ডার পাঠানো যায়নি। ইন্টারনেট ও সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।',sent?'ok':'err');
+ });box.append(send);
+}
+window.addEventListener('online',renderQueue);window.addEventListener('offline',renderQueue);
+renderQueue();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20261115-22',{updateViaCache:'none'}).catch(()=>{}));
+})();
 </script></body></html>
