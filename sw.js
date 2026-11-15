@@ -1,5 +1,5 @@
-const CACHE_NAME='madina-manager-v22';
-const CORE=['./','./index.html','./app.js?v=20261115-22','./manifest.webmanifest','./icon.svg','./price-list-2026-03-15.json.gz.b64','./ss-pipe-purchase-prices-2026.json','./order.html'];
+const CACHE_NAME='madina-manager-v23';
+const CORE=['./','./index.html','./app.js?v=20261115-23','./manifest.webmanifest','./icon.svg','./price-list-2026-03-15.json.gz.b64','./ss-pipe-purchase-prices-2026.json','./order.html'];
 const EXTERNAL=[
  'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js',
  'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js',
